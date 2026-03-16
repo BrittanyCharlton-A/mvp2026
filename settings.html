@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Requify Health</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--blue:#0E7CF0;--blue-dark:#0A5EC2;--blue-pale:#E8F2FF;--dark:#050D1A;--sidebar-bg:#070F1E;--text:#0D1B2A;--muted:#5A738A;--border:#E2EDF8;--white:#FFFFFF;--green:#0A9E6E;--amber:#D97706;--red:#DC2626;--light:#F4F8FF;--radius:10px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--light);display:flex;min-height:100vh;}
+  h1,h2,h3,h4{font-family:'Syne',sans-serif;}
+  .sidebar{width:240px;min-height:100vh;background:var(--sidebar-bg);border-right:1px solid rgba(14,124,240,0.12);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:50;}
+  .sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.06);text-decoration:none;}
+  .sidebar-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+  .sidebar-logo-icon svg{width:18px;height:18px;}
+  .sidebar-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#fff;}
+  .sidebar-logo-text span{color:var(--blue);}
+  .sidebar-clinic{margin:14px 12px;background:rgba(14,124,240,0.1);border:1px solid rgba(14,124,240,0.2);border-radius:8px;padding:10px 12px;}
+  .sidebar-clinic-name{font-size:13px;font-weight:600;color:#fff;}
+  .sidebar-clinic-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+  .sidebar-nav{flex:1;padding:8px 12px;}
+  .nav-section-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:14px 8px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;cursor:pointer;transition:all 0.15s;text-decoration:none;margin-bottom:2px;}
+  .nav-item:hover{background:rgba(255,255,255,0.06);}
+  .nav-item.active{background:rgba(14,124,240,0.15);}
+  .nav-item svg{width:16px;height:16px;color:rgba(255,255,255,0.4);flex-shrink:0;}
+  .nav-item.active svg{color:var(--blue);}
+  .nav-item span{font-size:14px;color:rgba(255,255,255,0.55);font-weight:500;}
+  .nav-item.active span{color:#fff;}
+  .nav-badge{margin-left:auto;background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;}
+  .sidebar-bottom{padding:12px;border-top:1px solid rgba(255,255,255,0.06);}
+  .sidebar-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;}
+  .user-avatar{width:32px;height:32px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'Syne',sans-serif;}
+  .user-name{font-size:13px;font-weight:600;color:#fff;}
+  .user-role{font-size:11px;color:rgba(255,255,255,0.35);}
+  .logout-btn{background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;padding:4px;margin-left:auto;}
+  .logout-btn svg{width:15px;height:15px;}
+  .main{margin-left:240px;flex:1;}
+  .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+  .topbar-title{font-size:17px;font-weight:700;color:var(--text);}
+  .content{padding:28px;max-width:860px;}
+
+  .settings-layout{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:start;}
+  .settings-nav{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;position:sticky;top:80px;}
+  .settings-nav-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;transition:all 0.15s;border-bottom:1px solid var(--light);}
+  .settings-nav-item:last-child{border-bottom:none;}
+  .settings-nav-item:hover{background:var(--light);}
+  .settings-nav-item.active{background:var(--blue-pale);border-right:3px solid var(--blue);}
+  .settings-nav-item svg{width:15px;height:15px;color:var(--muted);flex-shrink:0;}
+  .settings-nav-item.active svg{color:var(--blue);}
+  .settings-nav-item span{font-size:13px;color:var(--muted);font-weight:500;}
+  .settings-nav-item.active span{color:var(--blue);font-weight:600;}
+
+  .settings-panel{display:none;}
+  .settings-panel.active{display:block;}
+  .settings-section{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;overflow:hidden;}
+  .settings-section-header{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .settings-section-title{font-size:14px;font-weight:700;color:var(--text);}
+  .settings-section-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .settings-body{padding:22px;}
+  .form-row{display:grid;gap:16px;margin-bottom:16px;}
+  .form-row.cols-2{grid-template-columns:1fr 1fr;}
+  .form-row:last-child{margin-bottom:0;}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  label{font-size:12px;font-weight:600;color:var(--text);}
+  input[type="text"],input[type="email"],input[type="tel"],select,textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:all 0.2s;background:var(--white);width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(14,124,240,0.08);}
+  .field-hint{font-size:11px;color:var(--muted);}
+
+  /* TOGGLE */
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--light);}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-info{flex:1;}
+  .toggle-label{font-size:14px;font-weight:500;color:var(--text);}
+  .toggle-desc{font-size:12px;color:var(--muted);margin-top:2px;}
+  .toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+  .toggle input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:99px;cursor:pointer;transition:0.2s;}
+  .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:white;border-radius:50%;transition:0.2s;}
+  .toggle input:checked + .toggle-slider{background:var(--blue);}
+  .toggle input:checked + .toggle-slider:before{transform:translateX(20px);}
+
+  /* DELIVERY */
+  .delivery-option{border:1.5px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all 0.2s;display:flex;align-items:flex-start;gap:12px;}
+  .delivery-option:hover{border-color:var(--blue);}
+  .delivery-option.selected{border-color:var(--blue);background:var(--blue-pale);}
+  .delivery-option input[type="radio"]{margin-top:2px;accent-color:var(--blue);}
+  .delivery-label{font-size:14px;font-weight:600;color:var(--text);}
+  .delivery-desc{font-size:12px;color:var(--muted);margin-top:3px;}
+
+  /* TEAM */
+  .team-member{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--light);}
+  .team-member:last-child{border-bottom:none;}
+  .member-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;font-family:'Syne',sans-serif;flex-shrink:0;}
+  .member-info{flex:1;}
+  .member-name{font-size:14px;font-weight:600;color:var(--text);}
+  .member-email{font-size:12px;color:var(--muted);}
+  .role-badge{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+  .role-admin{background:var(--blue-pale);color:var(--blue);}
+  .role-provider{background:#E6F9F2;color:var(--green);}
+  .role-staff{background:var(--light);color:var(--muted);}
+  .btn-remove{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+  .btn-remove:hover{border-color:var(--red);color:var(--red);}
+
+  /* SAVE BAR */
+  .save-bar{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 22px;border-top:1px solid var(--border);background:var(--light);}
+  .btn-save{padding:9px 20px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .btn-save:hover{background:var(--blue-dark);}
+  .btn-cancel{padding:9px 16px;background:var(--white);border:1.5px solid var(--border);border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--text);}
+
+  .compliance-badge{display:flex;align-items:center;gap:8px;background:#E6F9F2;border:1px solid rgba(10,158,110,0.2);border-radius:8px;padding:10px 14px;margin-bottom:16px;}
+  .compliance-badge svg{width:16px;height:16px;color:var(--green);flex-shrink:0;}
+  .compliance-badge span{font-size:13px;color:var(--green);font-weight:500;}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo"><div class="sidebar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/></svg></div><span class="sidebar-logo-text">Requify <span>Health</span></span></a>
+  <div class="sidebar-clinic"><div class="sidebar-clinic-name">City Health Clinic</div><div class="sidebar-clinic-sub">Oshawa, Ontario</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a class="nav-item" href="submit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New Requisition</span></a>
+    <a class="nav-item" href="requisitions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg><span>Requisitions</span><span class="nav-badge">8</span></a>
+    <a class="nav-item" href="referrals.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg><span>Referrals</span><span class="nav-badge" style="background:#7C3AED">6</span></a>
+    <div class="nav-section-label">Clinic</div>
+    <a class="nav-item" href="analytics.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span></a>
+    <a class="nav-item active" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg><span>Settings</span></a>
+  </nav>
+  <div class="sidebar-bottom"><div class="sidebar-user"><div class="user-avatar">DC</div><div style="flex:1"><div class="user-name">Dr. Chen</div><div class="user-role">Attending Physician</div></div><button class="logout-btn" onclick="window.location.href='login.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></div>
+</aside>
+
+<main class="main">
+  <div class="topbar"><span class="topbar-title">Settings</span></div>
+  <div class="content">
+    <div class="settings-layout">
+      <!-- SETTINGS NAV -->
+      <div class="settings-nav">
+        <div class="settings-nav-item active" onclick="showPanel('clinic',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Clinic Profile</span>
+        </div>
+        <div class="settings-nav-item" onclick="showPanel('delivery',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Lab Delivery</span>
+        </div>
+        <div class="settings-nav-item" onclick="showPanel('notifications',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span>Notifications</span>
+        </div>
+        <div class="settings-nav-item" onclick="showPanel('team',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+          <span>Team</span>
+        </div>
+        <div class="settings-nav-item" onclick="showPanel('compliance',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Compliance</span>
+        </div>
+      </div>
+
+      <div>
+        <!-- CLINIC PROFILE -->
+        <div class="settings-panel active" id="panel-clinic">
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <div><div class="settings-section-title">Clinic Profile</div><div class="settings-section-sub">Auto-fills on every requisition</div></div>
+            </div>
+            <div class="settings-body">
+              <div class="form-row cols-2">
+                <div class="form-group"><label>Clinic Name</label><input type="text" id="s-clinic-name" value="City Health Clinic"></div>
+                <div class="form-group"><label>OHIP Billing Number</label><input type="text" id="s-billing" value="ON-2847391"></div>
+              </div>
+              <div class="form-row cols-2">
+                <div class="form-group"><label>Address</label><input type="text" id="s-addr" value="145 King St E, Oshawa, ON L1H 1B5"></div>
+                <div class="form-group"><label>Phone</label><input type="tel" id="s-phone" value="(905) 555-0142"></div>
+              </div>
+              <div class="form-row cols-2">
+                <div class="form-group"><label>Fax Number</label><input type="tel" id="s-fax" value="(905) 555-0143"><span class="field-hint">Used as return fax on outgoing requisitions</span></div>
+                <div class="form-group"><label>Email</label><input type="email" id="s-email" value="admin@cityhealthclinic.ca"></div>
+              </div>
+              <div class="form-row">
+                <div class="form-group"><label>Default Provider Name</label><input type="text" id="s-provider" value="Dr. Alex Chen"></div>
+              </div>
+            </div>
+            <div class="save-bar"><button class="btn-cancel" onclick="loadSettings()">Cancel</button><button class="btn-save" onclick="saveSettings()">Save Changes</button></div>
+          </div>
+        </div>
+
+        <!-- DELIVERY -->
+        <div class="settings-panel" id="panel-delivery">
+          <div class="settings-section">
+            <div class="settings-section-header"><div><div class="settings-section-title">Lab Delivery Settings</div><div class="settings-section-sub">How requisitions are sent to labs — no lab onboarding required</div></div></div>
+            <div class="settings-body">
+              <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">Requify delivers to labs automatically using their existing contact methods. Labs don't need to be on Requify to receive requisitions.</p>
+              <div class="delivery-option selected" onclick="selectDelivery(this)">
+                <input type="radio" name="delivery" checked>
+                <div><div class="delivery-label">eFax (Recommended)</div><div class="delivery-desc">Delivered via Documo API to the lab's fax number. Works with all labs, no setup required. Average delivery: under 30 seconds.</div></div>
+              </div>
+              <div class="delivery-option" onclick="selectDelivery(this)">
+                <input type="radio" name="delivery">
+                <div><div class="delivery-label">Email</div><div class="delivery-desc">PDF attached and sent to the lab's intake email. Best for digital-forward labs.</div></div>
+              </div>
+              <div class="delivery-option" onclick="selectDelivery(this)">
+                <input type="radio" name="delivery">
+                <div><div class="delivery-label">Both (eFax + Email)</div><div class="delivery-desc">Maximum redundancy. Recommended for STAT requisitions.</div></div>
+              </div>
+              <div style="margin-top:20px">
+                <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px">Lab Directory</div>
+                <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                  <table style="width:100%;border-collapse:collapse">
+                    <thead><tr style="background:var(--light)"><th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted)">Lab Name</th><th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted)">Fax</th><th style="text-align:left;padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted)">Email</th><th style="padding:10px 14px"></th></tr></thead>
+                    <tbody>
+                      <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;font-size:13px;font-weight:600">Oshawa Diagnostic Lab</td><td style="padding:10px 14px;font-size:13px;color:var(--muted)">(905) 555-0200</td><td style="padding:10px 14px;font-size:13px;color:var(--muted)">intake@oshawadiag.ca</td><td style="padding:10px 14px"><button class="btn-remove">Remove</button></td></tr>
+                      <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;font-size:13px;font-weight:600">Durham Imaging Centre</td><td style="padding:10px 14px;font-size:13px;color:var(--muted)">(905) 555-0300</td><td style="padding:10px 14px;font-size:13px;color:var(--muted)">orders@durhamimaging.ca</td><td style="padding:10px 14px"><button class="btn-remove">Remove</button></td></tr>
+                      <tr style="border-top:1px solid var(--border)"><td style="padding:10px 14px;font-size:13px;font-weight:600">LifeLabs Oshawa</td><td style="padding:10px 14px;font-size:13px;color:var(--muted)">(905) 555-0400</td><td style="padding:10px 14px;font-size:13px;color:var(--muted)">oshawa@lifelabs.com</td><td style="padding:10px 14px"><button class="btn-remove">Remove</button></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <button style="margin-top:10px;padding:8px 16px;border:1.5px dashed var(--border);border-radius:8px;background:none;font-size:13px;color:var(--muted);cursor:pointer;width:100%;transition:all 0.2s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ Add Lab</button>
+              </div>
+            </div>
+            <div class="save-bar"><button class="btn-cancel">Cancel</button><button class="btn-save" onclick="showSaved()">Save Changes</button></div>
+          </div>
+        </div>
+
+        <!-- NOTIFICATIONS -->
+        <div class="settings-panel" id="panel-notifications">
+          <div class="settings-section">
+            <div class="settings-section-header"><div><div class="settings-section-title">Notification Preferences</div><div class="settings-section-sub">Control alerts for clinic staff and patients</div></div></div>
+            <div class="settings-body">
+              <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Clinic Notifications</div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Requisition delivered to lab</div><div class="toggle-desc">Alert when eFax or email delivery is confirmed</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Lab status updates</div><div class="toggle-desc">Notify when lab marks a requisition In Progress or Complete</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">STAT requisition alerts</div><div class="toggle-desc">Immediate alert for any STAT priority submission</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Delivery failure alerts</div><div class="toggle-desc">Alert if eFax or email fails to deliver</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div style="font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin:20px 0 12px">Patient Notifications</div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Requisition sent confirmation</div><div class="toggle-desc">SMS + email when their requisition is submitted</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Results ready notification</div><div class="toggle-desc">Notify patient when lab marks results complete</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Appointment reminders</div><div class="toggle-desc">48hr reminder before scheduled lab appointment</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+            </div>
+            <div class="save-bar"><button class="btn-cancel">Cancel</button><button class="btn-save" onclick="showSaved()">Save Changes</button></div>
+          </div>
+        </div>
+
+        <!-- TEAM -->
+        <div class="settings-panel" id="panel-team">
+          <div class="settings-section">
+            <div class="settings-section-header">
+              <div><div class="settings-section-title">Team Management</div><div class="settings-section-sub">Manage authorized users and permissions</div></div>
+              <button style="padding:7px 14px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">+ Invite User</button>
+            </div>
+            <div class="settings-body">
+              <div class="team-member"><div class="member-avatar">AC</div><div class="member-info"><div class="member-name">Dr. Alex Chen</div><div class="member-email">alex.chen@cityhealthclinic.ca</div></div><span class="role-badge role-admin">Admin</span></div>
+              <div class="team-member"><div class="member-avatar" style="background:#0A9E6E">SM</div><div class="member-info"><div class="member-name">Dr. Sarah Martinez</div><div class="member-email">s.martinez@cityhealthclinic.ca</div></div><span class="role-badge role-provider">Provider</span><button class="btn-remove" style="margin-left:12px">Remove</button></div>
+              <div class="team-member"><div class="member-avatar" style="background:#7C3AED">JP</div><div class="member-info"><div class="member-name">Jamie Park</div><div class="member-email">j.park@cityhealthclinic.ca</div></div><span class="role-badge role-staff">Admin Staff</span><button class="btn-remove" style="margin-left:12px">Remove</button></div>
+              <div class="team-member"><div class="member-avatar" style="background:#D97706">RK</div><div class="member-info"><div class="member-name">Ravi Kumar</div><div class="member-email">r.kumar@cityhealthclinic.ca</div></div><span class="role-badge role-staff">Admin Staff</span><button class="btn-remove" style="margin-left:12px">Remove</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPLIANCE -->
+        <div class="settings-panel" id="panel-compliance">
+          <div class="settings-section">
+            <div class="settings-section-header"><div><div class="settings-section-title">Compliance & Privacy</div><div class="settings-section-sub">PHIPA compliance status and audit settings</div></div></div>
+            <div class="settings-body">
+              <div class="compliance-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>PHIPA Compliant — All data encrypted in transit (TLS 1.3) and at rest (AES-256)</span></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Audit logging</div><div class="toggle-desc">Log every access, view, and submission with timestamp and user ID</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Auto-lock on inactivity</div><div class="toggle-desc">Lock session after 15 minutes of inactivity</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="toggle-label">Two-factor authentication</div><div class="toggle-desc">Require 2FA for all admin accounts</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+              <div style="margin-top:20px;padding:16px;background:var(--light);border-radius:8px;border:1px solid var(--border)">
+                <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px">Data Retention Policy</div>
+                <div class="form-group"><label>Retain requisition data for</label>
+                  <select><option>7 years (Ontario PHIPA minimum)</option><option>10 years</option><option>Indefinitely</option></select>
+                </div>
+              </div>
+            </div>
+            <div class="save-bar"><button class="btn-cancel">Cancel</button><button class="btn-save" onclick="showSaved()">Save Changes</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- SAVED TOAST -->
+<div id="saved-toast" style="display:none;position:fixed;bottom:28px;right:28px;z-index:400;background:var(--green);border-radius:10px;padding:12px 18px;color:#fff;font-size:13px;font-weight:600;font-family:'Syne',sans-serif;box-shadow:0 4px 20px rgba(10,158,110,0.3);">✓ Settings saved</div>
+
+<script>
+const SETTINGS_KEY = 'requify_clinic_settings';
+const DEFAULTS = {
+  clinicName: 'City Health Clinic',
+  billing: 'ON-2847391',
+  addr: '145 King St E, Oshawa, ON L1H 1B5',
+  phone: '(905) 555-0142',
+  fax: '(905) 555-0143',
+  email: 'admin@cityhealthclinic.ca',
+  provider: 'Dr. Alex Chen',
+};
+
+function loadSettings() {
+  const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+  const s = {...DEFAULTS, ...saved};
+  document.getElementById('s-clinic-name').value = s.clinicName;
+  document.getElementById('s-billing').value = s.billing;
+  document.getElementById('s-addr').value = s.addr;
+  document.getElementById('s-phone').value = s.phone;
+  document.getElementById('s-fax').value = s.fax;
+  document.getElementById('s-email').value = s.email;
+  document.getElementById('s-provider').value = s.provider;
+  // Update sidebar display
+  const nameEl = document.querySelector('.sidebar-clinic-name');
+  if (nameEl) nameEl.textContent = s.clinicName;
+  const userEl = document.querySelector('.user-name');
+  if (userEl) userEl.textContent = s.provider;
+}
+
+function saveSettings() {
+  const s = {
+    clinicName: document.getElementById('s-clinic-name').value.trim() || DEFAULTS.clinicName,
+    billing:    document.getElementById('s-billing').value.trim() || DEFAULTS.billing,
+    addr:       document.getElementById('s-addr').value.trim() || DEFAULTS.addr,
+    phone:      document.getElementById('s-phone').value.trim() || DEFAULTS.phone,
+    fax:        document.getElementById('s-fax').value.trim() || DEFAULTS.fax,
+    email:      document.getElementById('s-email').value.trim() || DEFAULTS.email,
+    provider:   document.getElementById('s-provider').value.trim() || DEFAULTS.provider,
+  };
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  // Update sidebar live
+  const nameEl = document.querySelector('.sidebar-clinic-name');
+  if (nameEl) nameEl.textContent = s.clinicName;
+  const userEl = document.querySelector('.user-name');
+  if (userEl) userEl.textContent = s.provider;
+  showSaved();
+}
+
+function showPanel(id, el){
+  document.querySelectorAll('.settings-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.settings-nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  el.classList.add('active');
+}
+function selectDelivery(el){
+  document.querySelectorAll('.delivery-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input').checked = true;
+}
+function showSaved(){
+  const toast = document.getElementById('saved-toast');
+  toast.style.display = 'block';
+  setTimeout(()=>toast.style.display='none', 2500);
+}
+
+// Load on page init
+loadSettings();
+</script>
+</body>
+</html>

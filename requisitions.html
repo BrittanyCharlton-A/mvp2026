@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Requisitions — Requify Health</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --blue:#0E7CF0;--blue-dark:#0A5EC2;--blue-pale:#E8F2FF;
+    --dark:#050D1A;--sidebar-bg:#070F1E;--text:#0D1B2A;
+    --muted:#5A738A;--border:#E2EDF8;--white:#FFFFFF;
+    --green:#0A9E6E;--amber:#D97706;--red:#DC2626;--light:#F4F8FF;--radius:10px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--light);display:flex;min-height:100vh;}
+  h1,h2,h3,h4{font-family:'Syne',sans-serif;}
+
+  .sidebar{width:240px;min-height:100vh;background:var(--sidebar-bg);border-right:1px solid rgba(14,124,240,0.12);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:50;}
+  .sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.06);text-decoration:none;}
+  .sidebar-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+  .sidebar-logo-icon svg{width:18px;height:18px;}
+  .sidebar-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#fff;}
+  .sidebar-logo-text span{color:var(--blue);}
+  .sidebar-clinic{margin:14px 12px;background:rgba(14,124,240,0.1);border:1px solid rgba(14,124,240,0.2);border-radius:8px;padding:10px 12px;}
+  .sidebar-clinic-name{font-size:13px;font-weight:600;color:#fff;}
+  .sidebar-clinic-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+  .sidebar-nav{flex:1;padding:8px 12px;}
+  .nav-section-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:14px 8px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;cursor:pointer;transition:all 0.15s;text-decoration:none;margin-bottom:2px;}
+  .nav-item:hover{background:rgba(255,255,255,0.06);}
+  .nav-item.active{background:rgba(14,124,240,0.15);}
+  .nav-item svg{width:16px;height:16px;color:rgba(255,255,255,0.4);flex-shrink:0;}
+  .nav-item.active svg{color:var(--blue);}
+  .nav-item span{font-size:14px;color:rgba(255,255,255,0.55);font-weight:500;}
+  .nav-item.active span{color:#fff;}
+  .nav-badge{margin-left:auto;background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;}
+  .sidebar-bottom{padding:12px;border-top:1px solid rgba(255,255,255,0.06);}
+  .sidebar-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;}
+  .user-avatar{width:32px;height:32px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'Syne',sans-serif;}
+  .user-name{font-size:13px;font-weight:600;color:#fff;}
+  .user-role{font-size:11px;color:rgba(255,255,255,0.35);}
+  .logout-btn{background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;padding:4px;margin-left:auto;}
+  .logout-btn svg{width:15px;height:15px;}
+
+  .main{margin-left:240px;flex:1;}
+  .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+  .topbar-title{font-size:17px;font-weight:700;color:var(--text);}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .topbar-search{display:flex;align-items:center;gap:8px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:7px 12px;}
+  .topbar-search svg{width:15px;height:15px;color:var(--muted);}
+  .topbar-search input{border:none;background:none;outline:none;font-size:13px;color:var(--text);width:200px;font-family:'DM Sans',sans-serif;}
+  .topbar-search input::placeholder{color:var(--muted);}
+  .btn-new{display:flex;align-items:center;gap:7px;background:var(--blue);color:#fff;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:8px 16px;border-radius:8px;transition:all 0.2s;text-decoration:none;}
+  .btn-new:hover{background:var(--blue-dark);}
+  .btn-new svg{width:14px;height:14px;}
+
+  .content{padding:28px;}
+
+  /* STATUS LEGEND */
+  .status-legend{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;}
+  .legend-title{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:14px;}
+  .legend-title svg{width:14px;height:14px;}
+  .legend-pipeline{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+  .legend-step{flex:1;min-width:140px;}
+  .legend-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;margin-bottom:6px;white-space:nowrap;}
+  .legend-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+  .legend-arrow{font-size:18px;color:var(--border);padding-top:4px;flex-shrink:0;}
+  .legend-note{display:flex;align-items:center;gap:6px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);}
+  .legend-collapse{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:14px;user-select:none;}
+  .legend-collapse:hover{color:var(--blue);}
+
+  /* FILTER BAR */
+  .filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+  .filter-chip{padding:6px 14px;border-radius:99px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;transition:all 0.15s;}
+  .filter-chip:hover{border-color:var(--blue);color:var(--blue);}
+  .filter-chip.active{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .filter-chip .count{display:inline-block;background:rgba(255,255,255,0.25);border-radius:99px;padding:0 6px;font-size:11px;margin-left:4px;}
+  .filter-chip:not(.active) .count{background:var(--light);color:var(--muted);}
+  .spacer{flex:1;}
+  .sort-select{padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;background:var(--white);cursor:pointer;}
+
+  /* TABLE CARD */
+  .table-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  .table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .table-header h3{font-size:15px;font-weight:700;color:var(--text);}
+  .table-meta{font-size:12px;color:var(--muted);}
+  table{width:100%;border-collapse:collapse;}
+  thead th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);background:var(--light);border-bottom:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;cursor:pointer;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--light);}
+  td{padding:13px 16px;font-size:14px;color:var(--text);vertical-align:middle;}
+  .patient-name{font-weight:600;}
+  .patient-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+  .status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;}
+  .status-dot{width:6px;height:6px;border-radius:50%;}
+  .s-submitted{background:#EBF4FF;color:#1D6DB5;} .s-submitted .status-dot{background:#1D6DB5;}
+  .s-delivered{background:#F3EEFF;color:#7C3AED;} .s-delivered .status-dot{background:#7C3AED;}
+  .s-inprogress{background:#FFF8EB;color:var(--amber);} .s-inprogress .status-dot{background:var(--amber);animation:pulse 2s infinite;}
+  .s-complete{background:#E6F9F2;color:var(--green);} .s-complete .status-dot{background:var(--green);}
+  .s-urgent{background:#FEF2F2;color:var(--red);} .s-urgent .status-dot{background:var(--red);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  .exam-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:var(--blue-pale);color:var(--blue);}
+  .priority-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;}
+  .pri-routine{background:#E6F9F2;color:var(--green);}
+  .pri-stat{background:#FEF2F2;color:var(--red);}
+  .pri-urge{background:#FFF8EB;color:var(--amber);}
+  .pri-srat{background:var(--blue-pale);color:var(--blue);}
+
+  .delivery-method{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);}
+  .delivery-method svg{width:12px;height:12px;}
+
+  .action-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;margin-right:4px;}
+  .action-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-pale);}
+  .action-btn-primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600;}
+  .action-btn-primary:hover{background:var(--blue-dark);border-color:var(--blue-dark);color:#fff;}
+
+  /* DETAIL PANEL */
+  .detail-panel{position:fixed;top:0;right:-480px;width:480px;height:100vh;background:var(--white);border-left:1px solid var(--border);z-index:100;transition:right 0.3s ease;overflow-y:auto;display:flex;flex-direction:column;}
+  .detail-panel.open{right:0;}
+  .panel-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1;}
+  .panel-title{font-size:16px;font-weight:700;color:var(--text);}
+  .panel-close{background:none;border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:16px;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+  .panel-body{padding:24px;flex:1;}
+  .panel-section{margin-bottom:24px;}
+  .panel-section-title{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+  .panel-field{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--light);}
+  .panel-field:last-child{border-bottom:none;}
+  .panel-field-label{font-size:13px;color:var(--muted);}
+  .panel-field-value{font-size:13px;color:var(--text);font-weight:500;text-align:right;max-width:240px;}
+  .panel-actions{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;}
+  .btn-full{flex:1;padding:11px;border-radius:8px;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+  .btn-full-primary{background:var(--blue);color:#fff;border:none;}
+  .btn-full-primary:hover{background:var(--blue-dark);}
+  .btn-full-outline{background:var(--white);color:var(--text);border:1.5px solid var(--border);}
+  .btn-full-outline:hover{border-color:var(--blue);color:var(--blue);}
+
+  /* STATUS TIMELINE */
+  .timeline{margin-top:8px;}
+  .timeline-item{display:flex;gap:12px;margin-bottom:12px;}
+  .timeline-line{display:flex;flex-direction:column;align-items:center;gap:0;}
+  .timeline-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+  .timeline-connector{width:2px;flex:1;background:var(--border);min-height:16px;}
+  .timeline-content{flex:1;padding-bottom:4px;}
+  .timeline-label{font-size:13px;font-weight:600;color:var(--text);}
+  .timeline-time{font-size:11px;color:var(--muted);margin-top:2px;}
+
+  /* PDF MODAL */
+  .pdf-modal{display:none;position:fixed;inset:0;background:rgba(5,13,26,0.82);z-index:300;align-items:center;justify-content:center;}
+  .pdf-modal.show{display:flex;}
+  .pdf-modal-inner{background:#fff;border-radius:16px;width:min(720px,95vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+  .pdf-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--light);}
+  .pdf-modal-body{overflow-y:auto;padding:24px;background:#e8e8e8;flex:1;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">
+    <div class="sidebar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/></svg></div>
+    <span class="sidebar-logo-text">Requify <span>Health</span></span>
+  </a>
+  <div class="sidebar-clinic"><div class="sidebar-clinic-name">City Health Clinic</div><div class="sidebar-clinic-sub">Oshawa, Ontario</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a class="nav-item" href="submit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New Requisition</span></a>
+    <a class="nav-item active" href="requisitions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg><span>Requisitions</span><span class="nav-badge" id="req-badge">8</span></a>
+    <a class="nav-item" href="referrals.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg><span>Referrals</span><span class="nav-badge" style="background:#7C3AED">3</span></a>
+    <div class="nav-section-label">Clinic</div>
+    <a class="nav-item" href="analytics.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span></a>
+    <a class="nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg><span>Settings</span></a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="sidebar-user">
+      <div class="user-avatar">DC</div>
+      <div style="flex:1"><div class="user-name">Dr. Chen</div><div class="user-role">Attending Physician</div></div>
+      <button class="logout-btn" onclick="window.location.href='login.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title">Requisitions</span>
+    <div class="topbar-right">
+      <div class="topbar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search patients or ref #..." oninput="searchTable(this.value)">
+      </div>
+      <a href="submit.html" class="btn-new">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Requisition
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATUS LEGEND -->
+    <div class="status-legend">
+      <div class="legend-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Requisition lifecycle
+      </div>
+      <div class="legend-pipeline">
+        <div class="legend-step">
+          <div class="legend-badge s-submitted"><span class="status-dot"></span>Submitted</div>
+          <div class="legend-desc">Form completed and sent to the lab via eFax or email. The requisition is in transit.</div>
+        </div>
+        <div class="legend-arrow">→</div>
+        <div class="legend-step">
+          <div class="legend-badge s-delivered"><span class="status-dot"></span>Delivered to Lab</div>
+          <div class="legend-desc">eFax confirmed received by the lab's system. Patient can book their appointment.</div>
+        </div>
+        <div class="legend-arrow">→</div>
+        <div class="legend-step">
+          <div class="legend-badge s-inprogress"><span class="status-dot"></span>In Progress</div>
+          <div class="legend-desc">Patient has been seen or test is underway. Lab is processing the sample or images.</div>
+        </div>
+        <div class="legend-arrow">→</div>
+        <div class="legend-step">
+          <div class="legend-badge s-complete"><span class="status-dot"></span>Complete</div>
+          <div class="legend-desc">Results are ready and have been sent back to the referring provider.</div>
+        </div>
+      </div>
+      <div class="legend-note">
+        <span class="legend-badge s-urgent" style="display:inline-flex"><span class="status-dot"></span>Urgent / STAT</span>
+        <span style="margin-left:8px">Flagged for same-day processing. Appears at the top of all views.</span>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-chip active" onclick="filterStatus('all',this)">All <span class="count" id="cnt-all">8</span></button>
+      <button class="filter-chip" onclick="filterStatus('submitted',this)">Submitted <span class="count" id="cnt-submitted">2</span></button>
+      <button class="filter-chip" onclick="filterStatus('delivered',this)">Delivered to Lab <span class="count" id="cnt-delivered">2</span></button>
+      <button class="filter-chip" onclick="filterStatus('inprogress',this)">In Progress <span class="count" id="cnt-inprogress">2</span></button>
+      <button class="filter-chip" onclick="filterStatus('complete',this)">Complete <span class="count" id="cnt-complete">2</span></button>
+      <div class="spacer"></div>
+      <select class="sort-select" onchange="sortTable(this.value)">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="name">Patient name</option>
+        <option value="priority">Priority</option>
+      </select>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <h3>All Requisitions</h3>
+        <span class="table-meta" id="table-meta">Showing 8 requisitions</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Ref #</th>
+            <th>Exam</th>
+            <th>Priority</th>
+            <th>Delivery</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="req-table"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- DETAIL PANEL -->
+<div class="detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <span class="panel-title" id="panel-title">Requisition Detail</span>
+    <button class="panel-close" onclick="closePanel()">×</button>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section">
+      <div class="panel-section-title">Patient</div>
+      <div id="panel-patient-fields"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Exam & Priority</div>
+      <div id="panel-exam-fields"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Delivery</div>
+      <div id="panel-delivery-fields"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Status Timeline</div>
+      <div class="timeline" id="panel-timeline"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Clinical Notes</div>
+      <p id="panel-notes" style="font-size:13px;color:var(--text);line-height:1.6;"></p>
+    </div>
+  </div>
+  <div class="panel-actions">
+    <button class="btn-full btn-full-primary" id="panel-pdf-btn">View PDF</button>
+    <button class="btn-full btn-full-outline" onclick="closePanel()">Close</button>
+  </div>
+</div>
+
+<!-- PDF MODAL -->
+<div class="pdf-modal" id="pdf-modal">
+  <div class="pdf-modal-inner">
+    <div class="pdf-modal-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
+        <div><div id="pdf-modal-title" style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text);">Requisition</div><div id="pdf-modal-ref" style="font-size:11px;color:var(--muted);"></div></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="pdf-download-btn" style="display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">↓ Download</button>
+        <button onclick="closePDF()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;color:var(--muted);font-size:18px;">×</button>
+      </div>
+    </div>
+    <div class="pdf-modal-body"><canvas id="pdf-canvas" style="display:block;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,0.18);"></canvas></div>
+  </div>
+</div>
+
+<script>
+// Load clinic settings for sidebar
+(function(){ const s={...{clinicName:'City Health Clinic',provider:'Dr. Alex Chen'},...JSON.parse(localStorage.getItem('requify_clinic_settings')||'{}')}; const cn=document.querySelector('.sidebar-clinic-name');if(cn)cn.textContent=s.clinicName; const un=document.querySelector('.user-name');if(un)un.textContent=s.provider; })();
+
+const SEED = [
+  {id:'s1',ref:'REQ-2026-0021',patientName:'Anna Garrett',patientDob:'1970-02-14',healthCard:'3456-789-012',versionCode:'AC',patientPhone:'(416) 555-0134',patientEmail:'anna.garrett@email.com',providerName:'Dr. Alex Chen',billingNo:'ON-2847391',examType:'X-Ray',priority:'Routine',studies:'Chest PA & LAT',clinicalHistory:'Persistent cough 3 weeks. Rule out pneumonia.',dateSubmitted:'Apr 22, 2026',status:'complete',deliveryMethod:'eFax',labName:'Oshawa Diagnostic Lab',xray:['Chest PA & LAT R','Sternum'],us:[],bmd:[],breast:[],echo:[],nuclear:[],vein:[]},
+  {id:'s2',ref:'REQ-2026-0022',patientName:'Jorge Nguyen',patientDob:'1985-09-03',healthCard:'5678-901-234',versionCode:'JN',patientPhone:'(905) 555-0187',patientEmail:'jorge.nguyen@email.com',providerName:'Dr. Alex Chen',billingNo:'ON-2847391',examType:'Ultrasound',priority:'Routine',studies:'OB Series',clinicalHistory:'Routine OB series. 18 weeks pregnant.',dateSubmitted:'Apr 18, 2026',status:'inprogress',deliveryMethod:'Email',labName:'Durham Imaging Centre',xray:[],us:['OB Series (NT 11-14wk + Anatomy 18-20wk)','Anatomy Scan (18-20 weeks)'],bmd:[],breast:[],echo:[],nuclear:[],vein:[]},
+  {id:'s3',ref:'REQ-2026-0023',patientName:'Sarah Lee',patientDob:'1992-03-19',healthCard:'7890-123-456',versionCode:'SL',patientPhone:'(647) 555-0212',patientEmail:'sarah.lee@email.com',providerName:'Dr. Alex Chen',billingNo:'ON-2847391',examType:'Imaging',priority:'Routine',studies:'Routine Mammogram',clinicalHistory:'Annual screening mammogram. Family hx: mother breast cancer age 62.',dateSubmitted:'Apr 14, 2026',status:'delivered',deliveryMethod:'eFax',labName:'Oshawa Diagnostic Lab',xray:[],us:[],bmd:[],breast:['Mammography Routine'],echo:[],nuclear:[],vein:[]},
+  {id:'s4',ref:'REQ-2026-0024',patientName:'Michael Wright',patientDob:'1966-06-07',healthCard:'2345-678-901',versionCode:'MW',patientPhone:'(416) 555-0098',patientEmail:'michael.wright@email.com',providerName:'Dr. Alex Chen',billingNo:'ON-2847391',examType:'X-Ray',priority:'STAT',studies:'Chest X-Ray — STAT',clinicalHistory:'Acute chest pain, SOB onset 2hrs. Rule out pneumothorax. STAT.',dateSubmitted:'Apr 12, 2026',status:'submitted',deliveryMethod:'eFax',labName:'Oshawa Diagnostic Lab',xray:['Chest PA & LAT R','Sternum','SC Joints'],us:[],bmd:[],breast:[],echo:[],nuclear:[],vein:[]},
+  {id:'s5',ref:'REQ-2026-0020',patientName:'Eva Adams',patientDob:'1978-11-28',healthCard:'9012-345-678',versionCode:'EA',patientPhone:'(905) 555-0245',patientEmail:'eva.adams@email.com',providerName:'Dr. Alex Chen',billingNo:'ON-2847391',examType:'Imaging',priority:'Routine',studies:'Bone Scan',clinicalHistory:'Follow-up for known osteopenia. Previous scan 2yrs ago.',dateSubmitted:'Apr 10, 2026',status:'complete',deliveryMethod:'Email',labName:'Durham Imaging Centre',xray:[],us:[],bmd:['BMD Routine'],breast:[],echo:[],nuclear:['Bone Scan'],vein:[]},
+  {id:'s6',ref:'REQ-2026-0019',patientName:'David Kim',patientDob:'1955-04-22',healthCard:'1122-334-455',versionCode:'DK',patientPhone:'(905) 555-0311',patientEmail:'david.kim@email.com',providerName:'Dr. Alex Chen',billingNo:'ON-2847391',examType:'Lab Work',priority:'Urge',studies:'CBC, BMP, Lipid Panel, HbA1c',clinicalHistory:'Diabetes monitoring. Patient reports increased thirst and fatigue.',dateSubmitted:'Apr 8, 2026',status:'delivered',deliveryMethod:'eFax',labName:'LifeLabs Oshawa',xray:[],us:[],bmd:[],breast:[],echo:[],nuclear:[],vein:[]},
+  {id:'s7',ref:'REQ-2026-0018',patientName:'Priya Sharma',patientDob:'1990-12-05',healthCard:'6677-889-900',versionCode:'PS',patientPhone:'(416) 555-0422',patientEmail:'priya.sharma@email.com',providerName:'Dr. Alex Chen',billingNo:'ON-2847391',examType:'Lab Work',priority:'Routine',studies:'Thyroid (TSH), Vitamin D, Iron Studies',clinicalHistory:'Fatigue and hair loss. Screening for thyroid and nutritional deficiencies.',dateSubmitted:'Apr 5, 2026',status:'inprogress',deliveryMethod:'Email',labName:'LifeLabs Oshawa',xray:[],us:['Thyroid Only'],bmd:[],breast:[],echo:[],nuclear:[],vein:[]},
+  {id:'s8',ref:'REQ-2026-0017',patientName:'Thomas Okafor',patientDob:'1948-08-15',healthCard:'3344-556-677',versionCode:'TO',patientPhone:'(905) 555-0533',patientEmail:'thomas.okafor@email.com',providerName:'Dr. Alex Chen',billingNo:'ON-2847391',examType:'Imaging',priority:'Routine',studies:'Abdomen Only',clinicalHistory:'Persistent abdominal pain, 6 weeks duration. Rule out diverticulitis.',dateSubmitted:'Apr 2, 2026',status:'submitted',deliveryMethod:'eFax',labName:'Durham Imaging Centre',xray:[],us:['Abdomen Only','Kidneys & Bladder'],bmd:[],breast:[],echo:[],nuclear:[],vein:[]},
+];
+
+let allData = [...SEED];
+let currentFilter = 'all';
+let currentSort = 'newest';
+let activeRow = null;
+
+// Load stored submissions + pick up any pending from submit form
+try {
+  // Pick up fresh submission from submit page
+  const pending = localStorage.getItem('requify_pending');
+  if (pending) {
+    const req = JSON.parse(pending);
+    localStorage.removeItem('requify_pending');
+    // Normalise field names
+    if (!req.patientName && req.ptFirst) req.patientName = (req.ptFirst+' '+req.ptLast).trim();
+    if (!req.patientDob && req.ptDob) req.patientDob = req.ptDob;
+    if (!req.healthCard && req.ptHcard) req.healthCard = req.ptHcard;
+    if (!req.versionCode && req.ptVer) req.versionCode = req.ptVer;
+    if (!req.patientPhone && req.ptCell) req.patientPhone = req.ptCell;
+    if (!req.patientEmail) req.patientEmail = req.notifyEmail || '';
+    if (!req.examType) req.examType = req.xray?.length ? 'X-Ray' : req.us?.length ? 'Ultrasound' : 'Imaging';
+    if (!req.priority) req.priority = req.stat || 'Routine';
+    if (!req.studies) req.studies = [...(req.xray||[]), ...(req.us||[])].slice(0,3).join(', ') || 'As selected';
+    if (!req.clinicalHistory && req.clinicalHx) req.clinicalHistory = req.clinicalHx;
+    const stored = JSON.parse(localStorage.getItem('requify_submissions') || '[]');
+    stored.unshift(req);
+    localStorage.setItem('requify_submissions', JSON.stringify(stored));
+  }
+  const stored = JSON.parse(localStorage.getItem('requify_submissions') || '[]');
+  stored.forEach(r => {
+    // Normalise stored req shape
+    if (!r.patientName && r.ptFirst) r.patientName = (r.ptFirst+' '+r.ptLast).trim();
+    if (!r.patientDob && r.ptDob) r.patientDob = r.ptDob;
+    if (!r.healthCard && r.ptHcard) r.healthCard = r.ptHcard;
+    if (!r.examType) r.examType = r.xray?.length ? 'X-Ray' : r.us?.length ? 'Ultrasound' : 'Imaging';
+    if (!r.priority) r.priority = r.stat || 'Routine';
+    if (!r.studies) r.studies = [...(r.xray||[]), ...(r.us||[])].slice(0,3).join(', ') || 'As selected';
+    if (!r.clinicalHistory && r.clinicalHx) r.clinicalHistory = r.clinicalHx;
+    allData.unshift(r);
+  });
+} catch(e) { console.error('Load error:', e); }
+
+function statusClass(s){ return {submitted:'s-submitted',delivered:'s-delivered',inprogress:'s-inprogress',complete:'s-complete',urgent:'s-urgent'}[s] || 's-submitted'; }
+function statusLabel(s){ return {submitted:'Submitted',delivered:'Delivered to Lab',inprogress:'In Progress',complete:'Complete'}[s] || 'Submitted'; }
+function priorityClass(p){ return {Routine:'pri-routine',STAT:'pri-stat','Urgent':'pri-urge',"S'rAT":'pri-srat'}[p] || 'pri-routine'; }
+
+function renderTable(){
+  let rows = allData.filter(r => currentFilter === 'all' || r.status === currentFilter);
+  const search = document.querySelector('.topbar-search input')?.value.toLowerCase() || '';
+  if (search) rows = rows.filter(r => {
+    const name = (r.patientName || '').toLowerCase();
+    const ref = (r.ref || '').toLowerCase();
+    const ohip = (r.healthCard || r.ptHcard || '').toLowerCase().replace(/-/g,'');
+    const lab = (r.labName || '').toLowerCase();
+    const exam = (r.examType || '').toLowerCase();
+    const q = search.replace(/-/g,'');
+    return name.includes(search) || ref.includes(search) || ohip.includes(q) || lab.includes(search) || exam.includes(search);
+  });
+  if(currentSort==='oldest') rows = [...rows].reverse();
+  else if(currentSort==='name') rows = [...rows].sort((a,b)=>a.patientName.localeCompare(b.patientName));
+  else if(currentSort==='priority') rows = [...rows].sort((a,b)=>(a.priority==='STAT'?0:1)-(b.priority==='STAT'?0:1));
+
+  const tbody = document.getElementById('req-table');
+  tbody.innerHTML = rows.map(r => `
+    <tr onclick="openPanel('${r.id}')" data-id="${r.id}" data-status="${r.status}">
+      <td><div class="patient-name">${r.patientName}</div><div class="patient-sub">DOB: ${r.patientDob}</div></td>
+      <td><div style="font-size:12px;font-family:'Syne',sans-serif;font-weight:600;color:var(--blue)">${r.ref||'—'}</div></td>
+      <td><span class="exam-tag">${r.examType}</span></td>
+      <td><span class="priority-tag ${priorityClass(r.priority)}">${r.priority}</span></td>
+      <td><div class="delivery-method"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.08 1.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.07 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>${r.deliveryMethod||'eFax'}</div><div class="patient-sub" style="margin-top:3px">${r.labName||'—'}</div></td>
+      <td><span class="status-badge ${statusClass(r.status)}"><span class="status-dot"></span>${statusLabel(r.status)}</span></td>
+      <td style="font-size:12px;color:var(--muted)">${r.dateSubmitted}</td>
+      <td onclick="event.stopPropagation()">
+        <button class="action-btn action-btn-primary" onclick="viewPDF('${r.id}')">PDF</button>
+        <button class="action-btn" onclick="openPanel('${r.id}')">Detail</button>
+      </td>
+    </tr>
+  `).join('');
+
+  // Update counts
+  document.getElementById('table-meta').textContent = `Showing ${rows.length} requisition${rows.length!==1?'s':''}`;
+  const counts = {all:allData.length,submitted:allData.filter(r=>r.status==='submitted').length,delivered:allData.filter(r=>r.status==='delivered').length,inprogress:allData.filter(r=>r.status==='inprogress').length,complete:allData.filter(r=>r.status==='complete').length};
+  Object.entries(counts).forEach(([k,v])=>{ const el=document.getElementById('cnt-'+k); if(el) el.textContent=v; });
+  document.getElementById('req-badge').textContent = allData.length;
+}
+
+function filterStatus(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+function sortTable(v){ currentSort=v; renderTable(); }
+function searchTable(){ renderTable(); }
+
+// DETAIL PANEL
+function openPanel(id){
+  const r = allData.find(x=>x.id===id);
+  if(!r) return;
+  activeRow = r;
+  document.getElementById('panel-title').textContent = r.patientName;
+
+  document.getElementById('panel-patient-fields').innerHTML = [
+    ['Full Name', r.patientName],['Date of Birth', r.patientDob],
+    ['Health Card', (r.healthCard||'—') + (r.versionCode?' '+r.versionCode:'')],
+    ['Phone', r.patientPhone||'—'],['Email', r.patientEmail||'—'],
+  ].map(([l,v])=>`<div class="panel-field"><span class="panel-field-label">${l}</span><span class="panel-field-value">${v}</span></div>`).join('');
+
+  document.getElementById('panel-exam-fields').innerHTML = [
+    ['Exam Type', r.examType],['Studies', r.studies||'—'],
+    ['Priority', `<span class="priority-tag ${priorityClass(r.priority)}">${r.priority}</span>`],
+    ['Provider', r.providerName||'—'],['Ref #', r.ref||'—'],
+  ].map(([l,v])=>`<div class="panel-field"><span class="panel-field-label">${l}</span><span class="panel-field-value">${v}</span></div>`).join('');
+
+  document.getElementById('panel-delivery-fields').innerHTML = [
+    ['Method', r.deliveryMethod||'eFax'],['Lab / Destination', r.labName||'—'],
+    ['Date Sent', r.dateSubmitted||'—'],
+  ].map(([l,v])=>`<div class="panel-field"><span class="panel-field-label">${l}</span><span class="panel-field-value">${v}</span></div>`).join('');
+
+  const statusOrder = ['submitted','delivered','inprogress','complete'];
+  const currentIdx = statusOrder.indexOf(r.status);
+  const steps = [
+    {
+      label: 'Requisition Submitted',
+      desc: 'Form completed and sent to '+( r.labName||'the lab')+' via '+(r.deliveryMethod||'eFax')+'. The requisition is in transit.',
+      done: true,
+      active: r.status === 'submitted',
+      time: r.dateSubmitted
+    },
+    {
+      label: 'Delivered to Lab',
+      desc: 'eFax confirmed received by '+( r.labName||'the lab')+'. The patient can now call to book their appointment.',
+      done: currentIdx >= 1,
+      active: r.status === 'delivered',
+      time: currentIdx >= 1 ? 'Confirmed' : 'Awaiting confirmation'
+    },
+    {
+      label: 'In Progress',
+      desc: 'Patient has been seen or the test is underway. The lab is processing the sample or images.',
+      done: currentIdx >= 2,
+      active: r.status === 'inprogress',
+      time: currentIdx >= 2 ? 'Processing' : 'Pending'
+    },
+    {
+      label: 'Results Complete',
+      desc: 'Results are ready and have been sent back to '+( r.providerName||'the referring provider')+'.',
+      done: currentIdx >= 3,
+      active: r.status === 'complete',
+      time: currentIdx >= 3 ? r.dateSubmitted : 'Pending'
+    },
+  ];
+  document.getElementById('panel-timeline').innerHTML = steps.map((s,i)=>`
+    <div class="timeline-item">
+      <div class="timeline-line">
+        <div class="timeline-dot" style="
+          background:${s.done ? 'var(--green)' : 'var(--border)'};
+          width:${s.active ? '12px' : '10px'};
+          height:${s.active ? '12px' : '10px'};
+          box-shadow:${s.active ? '0 0 0 3px rgba(10,158,110,0.2)' : 'none'};
+          margin-left:${s.active ? '-1px' : '0'};
+        "></div>
+        ${i<steps.length-1?'<div class="timeline-connector" style="background:'+(s.done?'var(--green)':'var(--border)')+'"></div>':''}
+      </div>
+      <div class="timeline-content">
+        <div class="timeline-label" style="color:${s.done?'var(--text)':'var(--muted)'};font-weight:${s.active?'700':'500'}">${s.label}${s.active?' <span style="background:var(--blue-pale);color:var(--blue);font-size:10px;padding:1px 6px;border-radius:99px;font-weight:700;margin-left:6px">Current</span>':''}</div>
+        <div class="timeline-desc" style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4">${s.desc}</div>
+        <div class="timeline-time" style="margin-top:3px">${s.time}</div>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('panel-notes').textContent = r.clinicalHistory || 'No clinical notes provided.';
+  document.getElementById('panel-pdf-btn').onclick = () => viewPDF(id);
+  document.getElementById('detail-panel').classList.add('open');
+}
+function closePanel(){ document.getElementById('detail-panel').classList.remove('open'); activeRow=null; }
+
+// PDF VIEWER — uses stored pdfDataUrl for new submissions, generates proper form for seed data
+function buildPDFBytes(d){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'letter'});
+  const W=216,H=279,M=7;
+  function sf(sz,st,col){doc.setFontSize(sz);doc.setFont('helvetica',st||'normal');doc.setTextColor(...(col||[13,27,42]));}
+  function bar(x,y,w,h,r,g,b){doc.setFillColor(r,g,b);doc.rect(x,y,w,h,'F');}
+  function hline(x,y,w){doc.setDrawColor(180,190,200);doc.setLineWidth(0.2);doc.line(x,y,x+w,y);}
+  function vline(x,y,h){doc.setDrawColor(180,190,200);doc.setLineWidth(0.2);doc.line(x,y,x,y+h);}
+  function outline(x,y,w,h){doc.setDrawColor(160,170,180);doc.setLineWidth(0.25);doc.rect(x,y,w,h);}
+  function secBar(x,y,w,lbl,dark){bar(x,y,w,5.5,...(dark?[28,38,50]:[55,70,82]));sf(7,'bold',[255,255,255]);doc.text(lbl,x+2,y+3.9);}
+  function cell(x,y,w,lbl,val){sf(5.5,'bold',[100,110,120]);doc.text(lbl,x+1,y+2.2);sf(8,'normal',[10,20,35]);doc.text(String(val||'').substring(0,Math.floor(w/2)+4),x+1,y+6.5);}
+  function chk(x,y,ticked,lbl,mw){
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x,y,3.2,3.2);
+    if(ticked){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+0.4,y+1.7,x+1.3,y+2.8);doc.line(x+1.3,y+2.8,x+3.0,y+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);sf(6.8,'normal',[20,30,45]);
+    doc.text(mw?doc.splitTextToSize(lbl,mw)[0]:lbl,x+4.2,y+2.6);
+  }
+  function rl2(x,y,rT,lT,lbl){
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x,y,3.2,3.2);
+    if(rT){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+0.4,y+1.7,x+1.3,y+2.8);doc.line(x+1.3,y+2.8,x+3.0,y+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x+4.5,y,3.2,3.2);
+    if(lT){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+4.9,y+1.7,x+5.8,y+2.8);doc.line(x+5.8,y+2.8,x+7.5,y+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);sf(6.8,'normal',[20,30,45]);doc.text(lbl,x+9.5,y+2.6);
+  }
+  function subH(x,y,lbl){sf(6.5,'bold',[20,70,160]);doc.text(lbl,x,y);}
+  const LH=4.2;
+  const xray=d.xray||[], us=d.us||[], bmd=d.bmd||[], breast=d.breast||[], echo=d.echo||[], nuclear=d.nuclear||[], vein=d.vein||[];
+
+  // Header
+  bar(0,0,W,6.5,14,100,210);sf(8,'bold',[255,255,255]);doc.text('REQUIFY HEALTH — Digital Requisition',M,4.5);sf(7,'normal',[255,255,255]);doc.text('REF: '+(d.ref||'—')+'   Generated: '+new Date().toLocaleDateString('en-CA'),120,4.5);
+  bar(0,6.5,W,9,28,38,50);sf(12,'bold',[255,255,255]);doc.text('GENERAL REQUISITION FORM',M,13);sf(7,'bold',[255,255,255]);doc.text('FOR APPOINTMENT BOOKING CALL 519-256-4914  OR FAX: 519-256-3221',110,10);sf(6,'normal',[200,215,230]);doc.text('Please provide 24 hours advance notice. Arrive 10 minutes early with health card.',110,13.5);
+
+  let Y=17;
+  const colW=(W-M*2)/2-1;
+  const ptX=M,pvX=M+colW+2,infoH=40;
+  const ptName=d.patientName||(d.ptFirst||'')+' '+(d.ptLast||'');
+  const ptLast=ptName.split(' ').slice(-1)[0]||'—';
+  const ptFirst=ptName.split(' ')[0]||'—';
+
+  // Patient box
+  outline(ptX,Y,colW,infoH);secBar(ptX,Y,colW,'PATIENT INFORMATION',true);
+  let py=Y+7;
+  cell(ptX+1,py,colW/2-1,'LAST NAME',ptLast);vline(ptX+colW/2,py,9);cell(ptX+colW/2+1,py,colW/2-2,'FIRST NAME',ptFirst);
+  py+=10;hline(ptX,py,colW);const rw=colW/3;
+  cell(ptX+1,py,rw-1,'PHONE',d.patientPhone||d.ptCell||'—');vline(ptX+rw,py,9);cell(ptX+rw+1,py,rw-1,'DATE OF BIRTH',d.patientDob||d.ptDob||'—');vline(ptX+rw*2,py,9);cell(ptX+rw*2+1,py,rw-1,'EXAM DATE',d.dateSubmitted||'—');
+  py+=10;hline(ptX,py,colW);cell(ptX+1,py,colW*0.5,'HEALTH CARD',(d.healthCard||d.ptHcard||'—')+(d.versionCode||d.ptVer?' '+(d.versionCode||d.ptVer):''));vline(ptX+colW*0.5,py,9);cell(ptX+colW*0.5+1,py,colW*0.49,'LAB',d.labName||'—');
+
+  // Provider box
+  outline(pvX,Y,colW,infoH);secBar(pvX,Y,colW,'PROVIDER INFORMATION',true);
+  let pvy=Y+7;
+  cell(pvX+1,pvy,colW*0.65,'PROVIDER NAME (PRINT)',d.providerName||d.provName||'—');vline(pvX+colW*0.65,pvy,9);cell(pvX+colW*0.65+1,pvy,colW*0.34,'BILLING NO.',d.billingNo||d.provBilling||'—');
+  pvy+=10;hline(pvX,pvy,colW);sf(5.5,'bold',[100,110,120]);doc.text('PROVIDER SIGNATURE',pvX+1,pvy+2.2);vline(pvX+colW*0.65,pvy,10);
+  if(d.priority==='STAT'){bar(pvX+colW*0.69,pvy+0.5,colW*0.3,8,200,30,30);sf(9,'bold',[255,255,255]);doc.text('★ STAT',pvX+colW*0.76,pvy+6);}else{cell(pvX+colW*0.65+1,pvy,colW*0.34,'PRIORITY','Routine');}
+  pvy+=11;hline(pvX,pvy,colW);cell(pvX+1,pvy,colW-2,'CLINICAL HX / REASON',d.clinicalHistory||d.clinicalHx||'—');
+
+  Y+=infoH+2;
+  const studyText=d.studies||[...xray,...us].join(', ')||d.examType||'See selected exams below';
+  bar(M,Y,W-M*2,5.5,14,100,210);sf(7,'bold',[255,255,255]);doc.text('EXAMS ORDERED: '+studyText.substring(0,90)+(studyText.length>90?'...':''),M+2,Y+3.9);Y+=7;
+  if(d.labName||d.deliveryMethod){bar(M,Y,W-M*2,5,55,70,82);sf(6.5,'normal',[200,215,230]);doc.text('SENT TO: '+(d.labName||'Lab')+' · '+(d.deliveryMethod||'eFax').toUpperCase()+(d.notifyMethod&&d.notifyMethod!=='none'?' · Patient SMS ✓':''),M+2,Y+3.5);Y+=6;}
+
+  // X-RAY
+  const panW=colW,xX=M,uX=M+panW+2;
+  secBar(xX,Y,panW,'NO APPOINTMENT REQUIRED',true);Y+=5.5;secBar(xX,Y,panW,'X-RAY');Y+=5.5;
+  const xS=Y,xc=panW/3,xX1=xX+1,xX2=xX+xc+1,xX3=xX+xc*2+1;let xY1=Y,xY2=Y,xY3=Y;
+  subH(xX1,xY1+1,'CHEST');xY1+=LH;[['Chest PA & LAT','Chest PA & LAT R'],['Sternum','Sternum'],['SC Joints','SC Joints'],['Ribs R','Ribs R'],['Ribs L','Ribs L']].forEach(([l,v])=>{chk(xX1,xY1,xray.includes(v),l);xY1+=LH;});
+  xY1+=1.5;subH(xX1,xY1+1,'SPINE & PELVIS');xY1+=LH;['Cervical Spine','Thoracic Spine','Lumbar Spine','Sacrum & Coccyx','Pelvis','SI Joints','Scoliosis Series'].forEach(v=>{chk(xX1,xY1,xray.includes(v),v);xY1+=LH;});
+  subH(xX2,xY2+1,'ABDOMEN');xY2+=LH;['KUB/Flat Plate','Acute (3 views)'].forEach(v=>{chk(xX2,xY2,xray.includes(v),v);xY2+=LH;});xY2+=1.5;subH(xX2,xY2+1,'SKELETAL SURVEY');xY2+=LH;['Bone Age','Metastatic Survey'].forEach(v=>{chk(xX2,xY2,xray.includes(v),v);xY2+=LH;});xY2+=1.5;subH(xX2,xY2+1,'HEAD & NECK');xY2+=LH;['Skull','Facial Bones','Nasal Bones','Mandible','TM Joints','Soft Tissue Neck','Orbits MRI/FB','Orbits Trauma'].forEach(v=>{chk(xX2,xY2,xray.includes(v),v);xY2+=LH;});
+  subH(xX3,xY3+1,'UPPER EXTREMITIES');xY3+=LH;sf(6,'bold',[100,110,120]);doc.text('R    L',xX3,xY3+2);xY3+=LH;['Shoulder','Clavicle','AC Joints','Scapula','Humerus','Elbow','Forearm','Wrist','Hand','Digits'].forEach(v=>{rl2(xX3,xY3,xray.includes(v+' R'),xray.includes(v+' L'),v);xY3+=LH;});
+  xY3+=1.5;subH(xX3,xY3+1,'LOWER EXTREMITIES');xY3+=LH;sf(6,'bold',[100,110,120]);doc.text('R    L',xX3,xY3+2);xY3+=LH;['Hip','Femur','Knee','Tibia & Fibula','Ankle','Foot','Calcaneus','Toes'].forEach(v=>{rl2(xX3,xY3,xray.includes(v+' R'),xray.includes(v+' L'),v);xY3+=LH;});
+  const xB=Math.max(xY1,xY2,xY3)+2;vline(xX+xc,xS,xB-xS);vline(xX+xc*2,xS,xB-xS);outline(xX,Y-11,panW,xB-Y+11);
+
+  // ULTRASOUND
+  let uY=Y-11;secBar(uX,uY,panW,'APPOINTMENT REQUIRED FOR ALL EXAMS BELOW',true);uY+=5.5;secBar(uX,uY,panW,'ULTRASOUND');uY+=5.5;
+  const uS=uY,uc=panW/3,uX1=uX+1,uX2=uX+uc+1,uX3=uX+uc*2+1;let uY1=uY,uY2=uY,uY3=uY;
+  subH(uX1,uY1+1,'GENERAL');uY1+=LH;[['Abdomen & Pelvis Complete','Abdomen & Pelvis Complete (incl. Transvaginal for females)'],['No Transvaginal US','No TV (No Transvaginal)'],['Abdomen Complete','Abdomen Complete (limited bladder & lower quadrants)'],['Portal Hypertension','Portal Hypertension/Cirrhosis'],['Cirrhosis/Chronic Hep','Cirrhosis/Chronic Hepatitis Screening (q6mo)'],['Abdomen Only','Abdomen Only'],['Kidneys & Bladder','Kidneys & Bladder'],['R/O Appendicitis','R/O Appendicitis (incl. adjacent DDx)'],['R/O Pyloric Stenosis','R/O Pyloric Stenosis (0-6 months)']].forEach(([l,v])=>{chk(uX1,uY1,us.includes(v),l,uc-5);uY1+=LH;});
+  uY1+=1.5;subH(uX1,uY1+1,'PELVIS');uY1+=LH;[['Female Pelvis (incl. TV)','Female Pelvis (incl. Transvaginal)'],['Male Pelvis','Male Pelvis (excludes transrectal)'],['Transrectal Prostate','Transrectal Prostate (incl. Bladder)'],['Bladder','Bladder'],['Incl. Postvoid Residual','Include Postvoid Residual/PVR']].forEach(([l,v])=>{chk(uX1,uY1,us.includes(v),l,uc-5);uY1+=LH;});
+  uY1+=1.5;subH(uX1,uY1+1,'SMALL PARTS');uY1+=LH;[['Thyroid Only','Thyroid Only'],['Complete Neck','Complete Neck (incl. Thyroid & Salivary Glands)'],['Lump / Lymph Node','Lump/Lymph Nodes/Soft Tissue'],['Groin for Hernia','Groin for Hernia'],['Scrotum (Testicular)','Scrotum (Testicular)'],['Abdominal Wall','Abdominal Wall']].forEach(([l,v])=>{chk(uX1,uY1,us.includes(v),l,uc-5);uY1+=LH;});
+  subH(uX2,uY2+1,'MUSCULOSKELETAL');uY2+=LH;chk(uX2,uY2,us.includes('MSK - Include Relevant X-Rays'),'Incl. Relevant X-Rays');uY2+=LH;sf(6,'bold',[100,110,120]);doc.text('R    L',uX2,uY2+2);uY2+=LH;['Rotator Cuff','Elbow','Wrist','Hand','Hip','Knee','Ankle','Foot','Other'].forEach(v=>{rl2(uX2,uY2,us.includes('MSK '+v+' R'),us.includes('MSK '+v+' L'),v);uY2+=LH;});
+  uY2+=2;subH(uX2,uY2+1,'VASCULAR');uY2+=LH;['Carotid Arteries','CIMT','Aorta/Iliac (AAA Screen)'].forEach(v=>{chk(uX2,uY2,us.includes(v),v);uY2+=LH;});
+  uY2+=1.5;sf(6.5,'bold',[30,80,160]);doc.text('Lower Extremity',uX2,uY2+1);uY2+=LH;sf(6,'bold',[100,110,120]);doc.text('R   L   B',uX2,uY2+2);uY2+=LH;['Arterial','Venous R/O DVT','Venous Insufficiency'].forEach(v=>{[us.includes('LE '+v+' R'),us.includes('LE '+v+' L'),us.includes('LE '+v+' B')].forEach((t,i)=>{doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(uX2+i*4.5,uY2,3.2,3.2);if(t){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(uX2+i*4.5+0.4,uY2+1.7,uX2+i*4.5+1.3,uY2+2.8);doc.line(uX2+i*4.5+1.3,uY2+2.8,uX2+i*4.5+3.0,uY2+0.4);}doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);});sf(6.8,'normal',[20,30,45]);doc.text(v,uX2+15,uY2+2.6);uY2+=LH;});
+  chk(uX2,uY2,us.includes('Include Venous Consultation'),'Incl. Venous Consult');uY2+=LH;uY2+=1.5;sf(6.5,'bold',[30,80,160]);doc.text('Upper Extremity',uX2,uY2+1);uY2+=LH;['Arterial','Venous R/O DVT'].forEach(v=>{rl2(uX2,uY2,us.includes('UE '+v+' R'),us.includes('UE '+v+' L'),v);uY2+=LH;});
+  subH(uX3,uY3+1,'OBSTETRICAL');uY3+=LH;if(d.lmpDate){sf(6,'italic',[100,110,120]);doc.text('LMP: '+d.lmpDate,uX3,uY3+1);uY3+=LH;}[['1st Trimester (<11 wks)','OB 1st Trimester (<11 weeks)'],['OB Series (NT 11-14wk)','OB Series (NT 11-14wk + Anatomy 18-20wk)'],['EFTS/NT (11-14 wks)','EFTS/NT (11-14 weeks)'],['Anatomy Scan (18-20 wks)','Anatomy Scan (18-20 weeks)'],['2nd/3rd Trimester (NR)','2nd/3rd Trimester (Non Routine)']].forEach(([l,v])=>{chk(uX3,uY3,us.includes(v),l,uc-3);uY3+=LH;});
+  uY3+=2;subH(uX3,uY3+1,'BONE MINERAL DENSITY');uY3+=LH;[['First','BMD First'],['Routine','BMD Routine'],['High Risk','BMD High Risk']].forEach(([l,v])=>{chk(uX3,uY3,bmd.includes(v),l);uY3+=LH;});
+  uY3+=2;subH(uX3,uY3+1,'DIGITAL BREAST IMAGING');uY3+=LH;sf(6,'italic',[130,50,50]);doc.text('(Appointment Required)',uX3,uY3+1);uY3+=LH;[['Mammography — Routine','Mammography Routine'],['Mammography — Diagnostic','Mammography Diagnostic'],['Mammography — OB-SP','Mammography OB-SP'],['Male Breast Bilateral US','Male Breast Bilateral US']].forEach(([l,v])=>{chk(uX3,uY3,breast.includes(v),l,uc-3);uY3+=LH;});
+  sf(6.5,'normal',[30,40,55]);doc.text('Breast US:',uX3,uY3+2.5);['Breast US R','Breast US L','Breast US B'].forEach((v,i)=>{const bx=uX3+14+i*7;doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(bx,uY3,3.2,3.2);if(breast.includes(v)){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(bx+0.4,uY3+1.7,bx+1.3,uY3+2.8);doc.line(bx+1.3,uY3+2.8,bx+3.0,uY3+0.4);}doc.setDrawColor(100,110,120);sf(6.5,'normal',[30,40,55]);doc.text(['R','L','B'][i],bx+3.8,uY3+2.5);});uY3+=LH+2;
+  subH(uX3,uY3+1,'ECHOCARDIOGRAPHY');uY3+=LH;chk(uX3,uY3,echo.includes('2D Echocardiogram'),'2D Echocardiogram');uY3+=LH;uY3+=2;subH(uX3,uY3+1,'NUCLEAR MEDICINE');uY3+=LH;[['Nuclear Cardiac Stress Test','Nuclear Cardiac Stress Test'],['Persantine','Persantine'],['HIDA','HIDA'],['Bone Scan','Bone Scan'],['Myocardial Wall Motion (MUGA)','Myocardial Wall Motion (MUGA) with Ejection Fraction']].forEach(([l,v])=>{chk(uX3,uY3,nuclear.includes(v),l,uc-3);uY3+=LH;});
+  const uB=Math.max(uY1,uY2,uY3)+2;outline(uX,uY-11,panW,uB-uY+11);vline(uX+uc,uS,uB-uS);vline(uX+uc*2,uS,uB-uS);
+  const sB=Math.max(xB,uB)+2;
+  if(sB<H-14){secBar(M,sB,W-M*2,'VEIN CLINIC');let vy=sB+6;chk(M+2,vy,vein.includes('Vein Clinic Assessment/Consultation'),'Assessment / Consultation');}
+  bar(0,H-6,W,6,14,100,210);sf(6.5,'normal',[255,255,255]);doc.text('Requify Health · requifyhealth.com · PHIPA Compliant · '+(d.labName||'Clear Medical Imaging')+' · clearimaging.ca · All facilities are scent-free.',M,H-2.5);
+  return doc.output('arraybuffer');
+}
+
+async function viewPDF(id){
+  const r = allData.find(x=>x.id===id);
+  if(!r) return;
+  const modal = document.getElementById('pdf-modal');
+  modal.classList.add('show');
+  const ptName = r.patientName || ((r.ptFirst||'')+' '+(r.ptLast||'')).trim() || '—';
+  document.getElementById('pdf-modal-title').textContent = ptName+' — '+(r.examType||'Requisition');
+  document.getElementById('pdf-modal-ref').textContent = r.ref||id;
+
+  // Show loading
+  const canvas = document.getElementById('pdf-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width=600; canvas.height=200;
+  ctx.fillStyle='#F4F8FF'; ctx.fillRect(0,0,600,200);
+  ctx.fillStyle='#5A738A'; ctx.font='14px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Loading PDF...', 300, 100);
+
+  // Load PDF.js once
+  if(!window.pdfjsLib){
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    document.head.appendChild(s);
+    await new Promise(res=>s.onload=res);
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  // Normalise data shape — handles both seed data and new submission field names
+  const norm = {
+    ...r,
+    patientName: ptName,
+    patientDob:    r.patientDob   || r.ptDob      || '',
+    healthCard:    r.healthCard   || r.ptHcard    || '',
+    versionCode:   r.versionCode  || r.ptVer      || '',
+    patientPhone:  r.patientPhone || r.ptCell     || '',
+    providerName:  r.providerName || r.provName   || '',
+    billingNo:     r.billingNo    || r.provBilling|| '',
+    clinicalHistory: r.clinicalHistory || r.clinicalHx || '',
+    xray:    r.xray    || [],
+    us:      r.us      || [],
+    bmd:     r.bmd     || [],
+    breast:  r.breast  || [],
+    echo:    r.echo    || [],
+    nuclear: r.nuclear || [],
+    vein:    r.vein    || [],
+  };
+
+  // Always regenerate using the new Clear Medical Imaging layout
+  // pdfDataUrl is used if available (exact PDF from submit), otherwise rebuild
+  let pdfSource;
+  if(r.pdfDataUrl){
+    pdfSource = {url: r.pdfDataUrl};
+  } else {
+    const bytes = buildPDFBytes(norm);
+    pdfSource = {data: bytes};
+  }
+
+  // Download button
+  document.getElementById('pdf-download-btn').onclick = () => {
+    if(r.pdfDataUrl){
+      const a=document.createElement('a'); a.href=r.pdfDataUrl; a.download='Requify_'+(r.ref||id)+'.pdf'; a.click();
+    } else {
+      const bytes = buildPDFBytes(norm);
+      const blob = new Blob([bytes],{type:'application/pdf'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Requify_'+(r.ref||id)+'.pdf'; a.click();
+    }
+  };
+
+  try {
+    const pdfDoc = await pdfjsLib.getDocument(pdfSource).promise;
+    const page = await pdfDoc.getPage(1);
+    const mw = Math.min(720, window.innerWidth*0.9)-48;
+    const vp = page.getViewport({scale:1});
+    const svp = page.getViewport({scale: mw/vp.width});
+    canvas.width=svp.width; canvas.height=svp.height;
+    canvas.style.width=svp.width+'px'; canvas.style.height=svp.height+'px';
+    await page.render({canvasContext:canvas.getContext('2d'), viewport:svp}).promise;
+  } catch(e) {
+    ctx.fillStyle='#F4F8FF'; ctx.fillRect(0,0,canvas.width||600, canvas.height||200);
+    ctx.fillStyle='#DC2626'; ctx.font='13px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Could not render — try downloading instead.', (canvas.width||600)/2, (canvas.height||200)/2);
+  }
+}
+function closePDF(){ document.getElementById('pdf-modal').classList.remove('show'); }
+document.getElementById('pdf-modal').addEventListener('click',function(e){if(e.target===this)closePDF();});
+
+renderTable();
+</script>
+</body>
+</html>

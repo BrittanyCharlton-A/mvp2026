@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log In — Requify Health</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #0E7CF0; --blue-dark: #0A5EC2; --blue-pale: #E8F2FF;
+    --dark: #050D1A; --dark-2: #0D1B2E; --dark-3: #152338;
+    --text: #0D1B2A; --muted: #5A738A; --border: #D6E4F5;
+    --white: #FFFFFF; --green: #0A9E6E; --radius: 14px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif; background: var(--dark);
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%; height: 64px;
+    border-bottom: 1px solid rgba(14,124,240,0.12);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo-icon { width: 32px; height: 32px; background: var(--blue); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+  .nav-logo-icon svg { width: 18px; height: 18px; }
+  .nav-logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; color: #fff; }
+  .nav-logo-text span { color: var(--blue); }
+  .nav-back { color: rgba(255,255,255,0.45); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+  .nav-back:hover { color: rgba(255,255,255,0.8); }
+
+  .page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+  .container { width: 100%; max-width: 460px; }
+
+  .login-header { text-align: center; margin-bottom: 40px; }
+  .login-header h1 { font-size: 30px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+  .login-header p { font-size: 15px; color: rgba(255,255,255,0.45); }
+
+  /* PORTAL SELECTOR */
+  .portal-select { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+  .portal-btn {
+    background: var(--dark-3); border: 1.5px solid rgba(14,124,240,0.2);
+    border-radius: var(--radius); padding: 20px 16px; cursor: pointer;
+    transition: all 0.2s; text-align: center;
+  }
+  .portal-btn:hover { border-color: var(--blue); background: rgba(14,124,240,0.08); }
+  .portal-btn.active { border-color: var(--blue); background: rgba(14,124,240,0.12); }
+  .portal-btn-icon { font-size: 28px; margin-bottom: 8px; }
+  .portal-btn-label { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .portal-btn-desc { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+  /* FORM */
+  .form-card {
+    background: var(--dark-2); border: 1px solid rgba(14,124,240,0.15);
+    border-radius: 16px; padding: 32px;
+  }
+  .form-group { margin-bottom: 20px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.65); margin-bottom: 7px; }
+  input[type="email"], input[type="password"], input[type="text"] {
+    width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    color: #fff; font-size: 14px; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; outline: none;
+  }
+  input:focus { border-color: var(--blue); background: rgba(14,124,240,0.06); }
+  input::placeholder { color: rgba(255,255,255,0.25); }
+
+  .form-footer { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .remember { display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.5); cursor: pointer; }
+  .remember input { width: 14px; height: 14px; margin: 0; accent-color: var(--blue); }
+  .forgot { font-size: 13px; color: var(--blue); text-decoration: none; }
+  .forgot:hover { text-decoration: underline; }
+
+  .btn-submit {
+    width: 100%; padding: 13px; background: var(--blue); color: #fff;
+    border: none; border-radius: 8px; font-family: 'Syne', sans-serif;
+    font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+    letter-spacing: 0.01em;
+  }
+  .btn-submit:hover { background: var(--blue-dark); transform: translateY(-1px); }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+  .divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+  .divider span { font-size: 12px; color: rgba(255,255,255,0.3); }
+
+  .signup-link { text-align: center; font-size: 14px; color: rgba(255,255,255,0.45); margin-top: 20px; }
+  .signup-link a { color: var(--blue); text-decoration: none; font-weight: 500; }
+  .signup-link a:hover { text-decoration: underline; }
+
+  .secure-note {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 24px; font-size: 12px; color: rgba(255,255,255,0.25);
+  }
+  .secure-note svg { width: 13px; height: 13px; }
+</style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+        <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/>
+      </svg>
+    </div>
+    <span class="nav-logo-text">Requify <span>Health</span></span>
+  </a>
+  <a href="index.html" class="nav-back">← Back to home</a>
+</nav>
+
+<div class="page">
+  <div class="container">
+    <div class="login-header">
+      <h1>Welcome back</h1>
+      <p>Choose your portal to continue</p>
+    </div>
+
+    <div class="portal-select">
+      <div class="portal-btn active" onclick="selectPortal('clinic', this)" id="portal-clinic">
+        <div class="portal-btn-icon">🏥</div>
+        <div class="portal-btn-label">Clinic</div>
+        <div class="portal-btn-desc">Providers & admin</div>
+      </div>
+      <div class="portal-btn" onclick="selectPortal('patient', this)" id="portal-patient">
+        <div class="portal-btn-icon">🧑‍⚕️</div>
+        <div class="portal-btn-label">Patient</div>
+        <div class="portal-btn-desc">View your records</div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-group">
+        <label>Email address</label>
+        <input type="email" placeholder="you@clinic.com" id="email-input">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" placeholder="••••••••" id="password-input">
+      </div>
+      <div class="form-footer">
+        <label class="remember">
+          <input type="checkbox"> Remember me
+        </label>
+        <a href="#" class="forgot" onclick="showForgotModal();return false;">Forgot password?</a>
+      </div>
+      <button class="btn-submit" onclick="handleLogin()">Log In to Clinic Portal</button>
+    </div>
+
+    <p class="signup-link">Don't have an account? <a href="dashboard.html">Request access →</a></p>
+
+    <div class="secure-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+      </svg>
+      PHIPA compliant · End-to-end encrypted · SOC 2 ready
+    </div>
+  </div>
+</div>
+
+<div id="forgot-modal" style="display:none;position:fixed;inset:0;background:rgba(5,13,26,0.7);z-index:200;align-items:center;justify-content:center;">
+  <div style="background:#0D1B2E;border:1px solid rgba(14,124,240,0.2);border-radius:14px;padding:32px;width:min(400px,90vw);text-align:center;animation:fadeIn 0.3s ease">
+    <div style="width:48px;height:48px;background:rgba(14,124,240,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0E7CF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:8px">Reset Password</h3>
+    <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;line-height:1.5">Enter your clinic email address and we'll send you a password reset link.</p>
+    <input type="email" id="reset-email" placeholder="you@clinic.com" style="width:100%;padding:10px 14px;border:1.5px solid rgba(14,124,240,0.3);border-radius:8px;background:rgba(255,255,255,0.06);color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:14px">
+    <div id="reset-sent" style="display:none;background:rgba(10,158,110,0.15);border:1px solid rgba(10,158,110,0.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#0A9E6E;margin-bottom:14px">✓ Reset link sent! Check your inbox.</div>
+    <div style="display:flex;gap:10px">
+      <button onclick="closeForgotModal()" style="flex:1;padding:10px;border:1.5px solid rgba(255,255,255,0.1);border-radius:8px;background:none;color:rgba(255,255,255,0.5);font-family:'Syne',sans-serif;font-size:13px;cursor:pointer">Cancel</button>
+      <button onclick="sendReset()" style="flex:1;padding:10px;border:none;border-radius:8px;background:#0E7CF0;color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Send Reset Link</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentPortal = 'clinic';
+function selectPortal(type, el) {
+  currentPortal = type;
+  document.querySelectorAll('.portal-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const btn = document.querySelector('.btn-submit');
+  const emailInput = document.getElementById('email-input');
+  if (type === 'clinic') {
+    btn.textContent = 'Log In to Clinic Portal';
+    emailInput.placeholder = 'you@clinic.com';
+  } else {
+    btn.textContent = 'Log In to Patient Portal';
+    emailInput.placeholder = 'you@email.com';
+  }
+}
+function handleLogin() {
+  const email = document.getElementById('email-input').value;
+  const password = document.getElementById('password-input').value;
+  if (!email || !password) {
+    alert('Please enter your email and password.');
+    return;
+  }
+  // In production: Firebase auth here
+  window.location.href = 'dashboard.html';
+}
+document.getElementById('password-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+function showForgotModal() {
+  document.getElementById('forgot-modal').style.display = 'flex';
+  document.getElementById('reset-sent').style.display = 'none';
+  document.getElementById('reset-email').value = document.getElementById('email-input').value;
+}
+function closeForgotModal() {
+  document.getElementById('forgot-modal').style.display = 'none';
+}
+function sendReset() {
+  const email = document.getElementById('reset-email').value;
+  if (!email) return;
+  // In production: firebase.auth().sendPasswordResetEmail(email)
+  document.getElementById('reset-sent').style.display = 'block';
+  setTimeout(closeForgotModal, 2500);
+}
+document.getElementById('forgot-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeForgotModal();
+});
+</script>
+</body>
+</html>

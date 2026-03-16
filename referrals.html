@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Referrals — Requify Health</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--blue:#0E7CF0;--blue-dark:#0A5EC2;--blue-pale:#E8F2FF;--dark:#050D1A;--sidebar-bg:#070F1E;--text:#0D1B2A;--muted:#5A738A;--border:#E2EDF8;--white:#FFFFFF;--green:#0A9E6E;--amber:#D97706;--red:#DC2626;--purple:#7C3AED;--purple-pale:#F3EEFF;--light:#F4F8FF;--radius:10px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--light);display:flex;min-height:100vh;}
+  h1,h2,h3,h4{font-family:'Syne',sans-serif;}
+  /* SIDEBAR */
+  .sidebar{width:240px;min-height:100vh;background:var(--sidebar-bg);border-right:1px solid rgba(14,124,240,0.12);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:50;}
+  .sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.06);text-decoration:none;}
+  .sidebar-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+  .sidebar-logo-icon svg{width:18px;height:18px;}
+  .sidebar-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#fff;}
+  .sidebar-logo-text span{color:var(--blue);}
+  .sidebar-clinic{margin:14px 12px;background:rgba(14,124,240,0.1);border:1px solid rgba(14,124,240,0.2);border-radius:8px;padding:10px 12px;}
+  .sidebar-clinic-name{font-size:13px;font-weight:600;color:#fff;}
+  .sidebar-clinic-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+  .sidebar-nav{flex:1;padding:8px 12px;}
+  .nav-section-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:14px 8px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;cursor:pointer;transition:all 0.15s;text-decoration:none;margin-bottom:2px;}
+  .nav-item:hover{background:rgba(255,255,255,0.06);}
+  .nav-item.active{background:rgba(124,58,237,0.2);}
+  .nav-item svg{width:16px;height:16px;color:rgba(255,255,255,0.4);flex-shrink:0;}
+  .nav-item.active svg{color:var(--purple);}
+  .nav-item span{font-size:14px;color:rgba(255,255,255,0.55);font-weight:500;}
+  .nav-item.active span{color:#fff;}
+  .nav-badge{margin-left:auto;background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;}
+  .sidebar-bottom{padding:12px;border-top:1px solid rgba(255,255,255,0.06);}
+  .sidebar-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;}
+  .user-avatar{width:32px;height:32px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'Syne',sans-serif;}
+  .user-name{font-size:13px;font-weight:600;color:#fff;}
+  .user-role{font-size:11px;color:rgba(255,255,255,0.35);}
+  .logout-btn{background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;padding:4px;margin-left:auto;}
+  /* MAIN */
+  .main{margin-left:240px;flex:1;}
+  .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+  .topbar-title{font-size:17px;font-weight:700;color:var(--text);}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+  .topbar-search{display:flex;align-items:center;gap:7px;background:var(--light);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;}
+  .topbar-search svg{width:14px;height:14px;color:var(--muted);}
+  .topbar-search input{border:none;background:none;outline:none;font-size:13px;color:var(--text);width:180px;font-family:'DM Sans',sans-serif;}
+  .btn-new{display:flex;align-items:center;gap:7px;background:var(--purple);color:#fff;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;padding:8px 16px;border-radius:8px;transition:all 0.2s;text-decoration:none;}
+  .btn-new:hover{background:#6D28D9;}
+  .btn-new svg{width:14px;height:14px;}
+  .content{padding:28px;}
+  /* STATS */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+  .stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .stat-card.c-purple::before{background:var(--purple);}
+  .stat-card.c-blue::before{background:var(--blue);}
+  .stat-card.c-amber::before{background:var(--amber);}
+  .stat-card.c-green::before{background:var(--green);}
+  .stat-label{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;}
+  .stat-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--text);}
+  .stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+  /* FILTER */
+  .filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+  .filter-chip{padding:6px 14px;border-radius:99px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;transition:all 0.15s;}
+  .filter-chip:hover{border-color:var(--purple);color:var(--purple);}
+  .filter-chip.active{background:var(--purple);border-color:var(--purple);color:#fff;}
+  .chip-count{display:inline-block;background:rgba(255,255,255,0.25);border-radius:99px;padding:0 6px;font-size:11px;margin-left:4px;}
+  .filter-chip:not(.active) .chip-count{background:var(--light);color:var(--muted);}
+  .spacer{flex:1;}
+  .view-toggle{display:flex;gap:4px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:3px;}
+  .view-btn{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all 0.15s;background:none;color:var(--muted);}
+  .view-btn.active{background:var(--white);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+  /* KANBAN */
+  .kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+  .kanban-col{background:var(--light);border-radius:var(--radius);border:1px solid var(--border);min-height:400px;}
+  .kanban-col-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .kanban-col-title{font-size:13px;font-weight:700;color:var(--text);}
+  .kanban-count{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;}
+  .kanban-body{padding:12px;display:flex;flex-direction:column;gap:10px;}
+  .ref-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:all 0.2s;border-left:3px solid transparent;}
+  .ref-card:hover{box-shadow:0 4px 16px rgba(14,124,240,0.1);transform:translateY(-1px);}
+  .ref-card-name{font-weight:700;font-size:14px;color:var(--text);margin-bottom:3px;}
+  .ref-card-spec{font-size:12px;color:var(--purple);font-weight:600;margin-bottom:6px;}
+  .ref-card-reason{font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:8px;}
+  .ref-card-footer{display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid var(--light);}
+  .urgency-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;}
+  /* TABLE */
+  .table-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:none;}
+  .table-card.visible{display:block;}
+  table{width:100%;border-collapse:collapse;}
+  thead th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);background:var(--light);border-bottom:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid var(--border);transition:background 0.15s;cursor:pointer;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--light);}
+  td{padding:12px 16px;font-size:14px;color:var(--text);vertical-align:middle;}
+  .patient-name{font-weight:600;}
+  .patient-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;}
+  .status-dot{width:6px;height:6px;border-radius:50%;}
+  .s-pending{background:#F3EEFF;color:var(--purple);}.s-pending .status-dot{background:var(--purple);}
+  .s-accepted{background:#EBF4FF;color:var(--blue);}.s-accepted .status-dot{background:var(--blue);}
+  .s-scheduled{background:#FFF8EB;color:var(--amber);}.s-scheduled .status-dot{background:var(--amber);animation:pulse 2s infinite;}
+  .s-seen{background:#E6F9F2;color:var(--green);}.s-seen .status-dot{background:var(--green);}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .action-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--muted);cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif;margin-right:4px;}
+  .action-btn:hover{border-color:var(--purple);color:var(--purple);background:var(--purple-pale);}
+  .action-btn-primary{background:var(--purple);border-color:var(--purple);color:#fff;font-weight:600;}
+  .action-btn-primary:hover{background:#6D28D9;border-color:#6D28D9;color:#fff;}
+  /* DETAIL PANEL */
+  .detail-overlay{display:none;position:fixed;inset:0;background:rgba(5,13,26,0.4);z-index:100;}
+  .detail-overlay.open{display:block;}
+  .detail-panel{position:fixed;top:0;right:0;bottom:0;width:420px;background:var(--white);border-left:1px solid var(--border);display:flex;flex-direction:column;z-index:101;transform:translateX(100%);transition:transform 0.3s ease;overflow:hidden;}
+  .detail-panel.open{transform:translateX(0);}
+  .panel-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .panel-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);}
+  .panel-close{background:none;border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:18px;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+  .panel-body{flex:1;overflow-y:auto;padding:20px 22px;}
+  .panel-section{margin-bottom:20px;}
+  .panel-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:10px;}
+  .panel-field{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--light);}
+  .panel-field:last-child{border-bottom:none;}
+  .panel-field-label{font-size:12px;color:var(--muted);flex-shrink:0;margin-right:12px;}
+  .panel-field-value{font-size:13px;color:var(--text);font-weight:500;text-align:right;}
+  .panel-notes{font-size:13px;color:var(--text);line-height:1.6;background:var(--light);border-radius:8px;padding:12px 14px;}
+  .panel-status-btns{display:flex;flex-direction:column;gap:8px;}
+  .status-move-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;font-size:13px;color:var(--text);transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+  .status-move-btn:hover{border-color:var(--purple);background:var(--purple-pale);color:var(--purple);}
+  .status-move-btn.current{border-color:var(--purple);background:var(--purple-pale);color:var(--purple);font-weight:600;}
+  .status-move-btn svg{width:14px;height:14px;}
+  .panel-actions{padding:16px 22px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;}
+  .btn-full{flex:1;padding:10px;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;border:none;}
+  .btn-full-primary{background:var(--purple);color:#fff;}
+  .btn-full-primary:hover{background:#6D28D9;}
+  .btn-full-outline{background:var(--white);color:var(--text);border:1.5px solid var(--border);}
+  .btn-full-outline:hover{border-color:var(--purple);color:var(--purple);}
+  /* NEW REFERRAL MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,13,26,0.6);z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--white);border-radius:14px;width:min(560px,94vw);max-height:90vh;overflow-y:auto;animation:popIn 0.3s ease;}
+  @keyframes popIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--text);}
+  .modal-close{background:none;border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;font-size:18px;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+  .modal-body{padding:22px 24px;}
+  .modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+  .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+  .fl{font-size:11px;font-weight:600;color:var(--text);}
+  .fl .req{color:var(--red);margin-left:2px;}
+  input[type=text],input[type=date],input[type=tel],select,textarea{padding:8px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:all 0.2s;background:var(--white);width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,0.08);}
+  .gr2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .btn-cancel{padding:9px 18px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:'Syne',sans-serif;}
+  .btn-submit{padding:9px 22px;background:var(--purple);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;}
+  .btn-submit:hover{background:#6D28D9;}
+  /* EMPTY */
+  .kanban-empty{text-align:center;padding:28px 14px;color:var(--muted);font-size:12px;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">
+    <div class="sidebar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/></svg></div>
+    <span class="sidebar-logo-text">Requify <span>Health</span></span>
+  </a>
+  <div class="sidebar-clinic"><div class="sidebar-clinic-name">City Health Clinic</div><div class="sidebar-clinic-sub">Oshawa, Ontario</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a class="nav-item" href="submit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New Requisition</span></a>
+    <a class="nav-item" href="requisitions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg><span>Requisitions</span><span class="nav-badge" id="req-badge">8</span></a>
+    <a class="nav-item active" href="referrals.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg><span>Referrals</span><span class="nav-badge" style="background:var(--purple)" id="ref-badge">6</span></a>
+    <div class="nav-section-label">Clinic</div>
+    <a class="nav-item" href="analytics.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span></a>
+    <a class="nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg><span>Settings</span></a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="sidebar-user">
+      <div class="user-avatar">DC</div>
+      <div style="flex:1"><div class="user-name">Dr. Chen</div><div class="user-role">Attending Physician</div></div>
+      <button class="logout-btn" onclick="window.location.href='login.html'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title">Referrals</span>
+    <div class="topbar-right">
+      <div class="topbar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search patient or specialist..." oninput="searchReferrals(this.value)">
+      </div>
+      <button class="btn-new" onclick="openNewModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Referral
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card c-purple"><div class="stat-label">Total Referrals</div><div class="stat-value" id="stat-total">6</div><div class="stat-sub">All time</div></div>
+      <div class="stat-card c-blue"><div class="stat-label">Pending / Accepted</div><div class="stat-value" id="stat-open" style="color:var(--purple)">2</div><div class="stat-sub">Awaiting specialist</div></div>
+      <div class="stat-card c-amber"><div class="stat-label">Scheduled</div><div class="stat-value" id="stat-scheduled" style="color:var(--amber)">2</div><div class="stat-sub">Appointment booked</div></div>
+      <div class="stat-card c-green"><div class="stat-label">Completed</div><div class="stat-value" id="stat-seen" style="color:var(--green)">2</div><div class="stat-sub">Specialist seen</div></div>
+    </div>
+
+    <!-- FILTER + VIEW TOGGLE -->
+    <div class="filter-bar">
+      <button class="filter-chip active" onclick="filterBy('all',this)">All <span class="chip-count" id="cnt-all">6</span></button>
+      <button class="filter-chip" onclick="filterBy('pending',this)">Pending <span class="chip-count" id="cnt-pending">2</span></button>
+      <button class="filter-chip" onclick="filterBy('accepted',this)">Accepted <span class="chip-count" id="cnt-accepted">0</span></button>
+      <button class="filter-chip" onclick="filterBy('scheduled',this)">Scheduled <span class="chip-count" id="cnt-scheduled">2</span></button>
+      <button class="filter-chip" onclick="filterBy('seen',this)">Seen <span class="chip-count" id="cnt-seen">2</span></button>
+      <div class="spacer"></div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn-kanban" onclick="setView('kanban')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Board
+        </button>
+        <button class="view-btn" id="btn-table" onclick="setView('table')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>List
+        </button>
+      </div>
+    </div>
+
+    <!-- KANBAN -->
+    <div class="kanban" id="kanban-view">
+      <div class="kanban-col">
+        <div class="kanban-col-header"><span class="kanban-col-title">Pending</span><span class="kanban-count" style="background:#F3EEFF;color:var(--purple)" id="k-pending">0</span></div>
+        <div class="kanban-body" id="col-pending"></div>
+      </div>
+      <div class="kanban-col">
+        <div class="kanban-col-header"><span class="kanban-col-title">Accepted</span><span class="kanban-count" style="background:#EBF4FF;color:var(--blue)" id="k-accepted">0</span></div>
+        <div class="kanban-body" id="col-accepted"></div>
+      </div>
+      <div class="kanban-col">
+        <div class="kanban-col-header"><span class="kanban-col-title">Scheduled</span><span class="kanban-count" style="background:#FFF8EB;color:var(--amber)" id="k-scheduled">0</span></div>
+        <div class="kanban-body" id="col-scheduled"></div>
+      </div>
+      <div class="kanban-col">
+        <div class="kanban-col-header"><span class="kanban-col-title">Seen</span><span class="kanban-count" style="background:#E6F9F2;color:var(--green)" id="k-seen">0</span></div>
+        <div class="kanban-body" id="col-seen"></div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-card" id="table-view">
+      <table>
+        <thead><tr><th>Patient</th><th>Specialist</th><th>Reason</th><th>Priority</th><th>Status</th><th>Appt Date</th><th>Actions</th></tr></thead>
+        <tbody id="ref-table"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- DETAIL PANEL OVERLAY -->
+<div class="detail-overlay" id="detail-overlay" onclick="closePanel()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="panel-header">
+    <span class="panel-title" id="panel-title">Referral Detail</span>
+    <button class="panel-close" onclick="closePanel()">×</button>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section">
+      <div class="panel-section-title">Patient</div>
+      <div id="panel-patient"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Referral Details</div>
+      <div id="panel-details"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Clinical Notes</div>
+      <div class="panel-notes" id="panel-notes"></div>
+    </div>
+    <div class="panel-section">
+      <div class="panel-section-title">Update Status</div>
+      <div class="panel-status-btns" id="panel-status-btns"></div>
+    </div>
+  </div>
+  <div class="panel-actions">
+    <button class="btn-full btn-full-primary" id="panel-edit-btn">Edit Referral</button>
+    <button class="btn-full btn-full-outline" onclick="closePanel()">Close</button>
+  </div>
+</div>
+
+<!-- NEW REFERRAL MODAL -->
+<div class="modal-overlay" id="new-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-heading">New Referral</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="gr2">
+        <div class="fg"><label class="fl">Patient name <span class="req">*</span></label><input type="text" id="f-patient" placeholder="First Last"></div>
+        <div class="fg"><label class="fl">Date of birth</label><input type="date" id="f-dob"></div>
+      </div>
+      <div class="gr2">
+        <div class="fg"><label class="fl">Specialist / Department <span class="req">*</span></label>
+          <select id="f-specialist">
+            <option value="">Select specialist</option>
+            <option>Cardiology</option><option>Dermatology</option><option>Endocrinology</option>
+            <option>Gastroenterology</option><option>Hematology</option><option>Nephrology</option>
+            <option>Neurology</option><option>Oncology</option><option>Ophthalmology</option>
+            <option>Orthopedics</option><option>Psychiatry</option><option>Pulmonology</option>
+            <option>Rheumatology</option><option>Urology</option><option>Vascular Surgery</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Priority <span class="req">*</span></label>
+          <select id="f-priority">
+            <option value="Routine">Routine</option>
+            <option value="Urgent">Urgent</option>
+            <option value="STAT">STAT</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Reason for referral <span class="req">*</span></label><input type="text" id="f-reason" placeholder="e.g. Chest pain on exertion, rule out CAD"></div>
+      <div class="fg"><label class="fl">Clinical notes / history</label><textarea id="f-notes" rows="3" placeholder="ECG findings, relevant hx, medications, previous workup..."></textarea></div>
+      <div class="gr2">
+        <div class="fg"><label class="fl">Preferred specialist (if known)</label><input type="text" id="f-spec-name" placeholder="Dr. Name or hospital"></div>
+        <div class="fg"><label class="fl">Appointment date (if booked)</label><input type="date" id="f-appt"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-submit" onclick="saveReferral()">Create Referral</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const s={...{clinicName:'City Health Clinic',provider:'Dr. Alex Chen'},...JSON.parse(localStorage.getItem('requify_clinic_settings')||'{}')};
+  const cn=document.querySelector('.sidebar-clinic-name');if(cn)cn.textContent=s.clinicName;
+  const un=document.querySelector('.user-name');if(un)un.textContent=s.provider;
+})();
+
+// ── DATA ──
+let REFERRALS = [
+  {id:'r1',patientName:'Linda Marsh',dob:'1963-07-11',specialist:'Cardiology',specName:'Dr. R. Patel – Oshawa Cardiac',reason:'Chest pain on exertion, rule out coronary artery disease',priority:'Urgent',status:'pending',date:'Apr 20, 2026',apptDate:'—',notes:'ECG shows ST depression. Refer to cardiologist urgently. Patient on ASA 81mg and atorvastatin.'},
+  {id:'r2',patientName:'Ben Osei',dob:'1978-02-28',specialist:'Orthopedics',specName:'Dr. T. Singh – Durham Ortho',reason:'Chronic knee pain, possible meniscus tear',priority:'Routine',status:'scheduled',date:'Apr 15, 2026',apptDate:'May 8, 2026',notes:'MRI confirmed medial meniscus tear. Refer for surgical consult. Patient otherwise healthy.'},
+  {id:'r3',patientName:'Nina Patel',dob:'1990-09-14',specialist:'Dermatology',specName:'',reason:'Suspicious mole — changing size and colour',priority:'Urgent',status:'seen',date:'Apr 10, 2026',apptDate:'Apr 24, 2026',notes:'Irregular border, asymmetric. ABCDE criteria met. Expedited referral. Biopsy results pending.'},
+  {id:'r4',patientName:'Charles Roy',dob:'1955-12-03',specialist:'Gastroenterology',specName:'Dr. M. Nguyen – Durham GI',reason:'Recurrent abdominal pain, rule out IBD',priority:'Routine',status:'seen',date:'Apr 5, 2026',apptDate:'Apr 18, 2026',notes:'3 months of abdominal cramping and irregular bowel habits. CRP elevated. Colonoscopy recommended.'},
+  {id:'r5',patientName:'Amara Diallo',dob:'1987-05-20',specialist:'Neurology',specName:'',reason:'Recurring migraines with aura',priority:'Routine',status:'scheduled',date:'Apr 2, 2026',apptDate:'May 12, 2026',notes:'Migraines 3x/month with visual aura. Not responding to sumatriptan. MRI brain ordered.'},
+  {id:'r6',patientName:'James Wolfe',dob:'1971-11-30',specialist:'Ophthalmology',specName:'',reason:'Sudden vision changes, possible retinal detachment',priority:'STAT',status:'pending',date:'Apr 22, 2026',apptDate:'—',notes:'Sudden floaters and flashing lights onset today. STAT ophthalmology consult required.'},
+];
+
+// Load stored referrals
+try {
+  const stored = JSON.parse(localStorage.getItem('requify_referrals') || '[]');
+  stored.forEach(r => { if (!REFERRALS.find(x=>x.id===r.id)) REFERRALS.unshift(r); });
+} catch(e) {}
+
+let currentFilter = 'all';
+let currentView = 'kanban';
+let activeId = null;
+let editingId = null;
+let searchQuery = '';
+
+const priorityColor = { Routine:'var(--green)', Urgent:'var(--amber)', STAT:'var(--red)' };
+const priorityBg = { Routine:'#E6F9F2', Urgent:'#FFF8EB', STAT:'#FEF2F2' };
+const statusCls = { pending:'s-pending', accepted:'s-accepted', scheduled:'s-scheduled', seen:'s-seen' };
+const statusLabel = { pending:'Pending', accepted:'Accepted', scheduled:'Scheduled', seen:'Seen' };
+const statusNext = {
+  pending: [{label:'Mark Accepted', next:'accepted', icon:'✓'}, {label:'Mark Scheduled', next:'scheduled', icon:'📅'}],
+  accepted: [{label:'Mark Scheduled', next:'scheduled', icon:'📅'}, {label:'Mark Seen', next:'seen', icon:'✅'}],
+  scheduled: [{label:'Mark Seen / Complete', next:'seen', icon:'✅'}],
+  seen: [],
+};
+
+function getFiltered() {
+  let list = currentFilter === 'all' ? [...REFERRALS] : REFERRALS.filter(r => r.status === currentFilter);
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(r => r.patientName.toLowerCase().includes(q) || r.specialist.toLowerCase().includes(q) || r.reason.toLowerCase().includes(q));
+  }
+  return list;
+}
+
+function updateCounts() {
+  const all = REFERRALS;
+  document.getElementById('cnt-all').textContent = all.length;
+  document.getElementById('cnt-pending').textContent = all.filter(r=>r.status==='pending').length;
+  document.getElementById('cnt-accepted').textContent = all.filter(r=>r.status==='accepted').length;
+  document.getElementById('cnt-scheduled').textContent = all.filter(r=>r.status==='scheduled').length;
+  document.getElementById('cnt-seen').textContent = all.filter(r=>r.status==='seen').length;
+  document.getElementById('stat-total').textContent = all.length;
+  document.getElementById('stat-open').textContent = all.filter(r=>r.status==='pending'||r.status==='accepted').length;
+  document.getElementById('stat-scheduled').textContent = all.filter(r=>r.status==='scheduled').length;
+  document.getElementById('stat-seen').textContent = all.filter(r=>r.status==='seen').length;
+  document.getElementById('ref-badge').textContent = all.filter(r=>r.status!=='seen').length;
+  ['pending','accepted','scheduled','seen'].forEach(s => {
+    const el = document.getElementById('k-'+s);
+    if(el) el.textContent = all.filter(r=>r.status===s).length;
+  });
+}
+
+function renderKanban() {
+  const filtered = getFiltered();
+  ['pending','accepted','scheduled','seen'].forEach(col => {
+    const items = filtered.filter(r => r.status === col);
+    document.getElementById('col-'+col).innerHTML = items.length ? items.map(r => `
+      <div class="ref-card" style="border-left-color:${priorityColor[r.priority]||'var(--blue)'}" onclick="openPanel('${r.id}')">
+        <div class="ref-card-name">${r.patientName}</div>
+        <div class="ref-card-spec">${r.specialist}</div>
+        <div class="ref-card-reason">${r.reason.substring(0,70)}${r.reason.length>70?'...':''}</div>
+        ${r.apptDate && r.apptDate!=='—' ? `<div style="font-size:11px;color:var(--amber);font-weight:600;margin-bottom:6px">📅 ${r.apptDate}</div>` : ''}
+        <div class="ref-card-footer">
+          <span style="font-size:11px;color:var(--muted)">${r.date}</span>
+          <span class="urgency-pill" style="background:${priorityBg[r.priority]||'#E6F9F2'};color:${priorityColor[r.priority]||'var(--green)'}">
+            <span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block"></span>
+            ${r.priority}
+          </span>
+        </div>
+      </div>
+    `).join('') : `<div class="kanban-empty">No referrals</div>`;
+  });
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  document.getElementById('ref-table').innerHTML = filtered.length ? filtered.map(r => `
+    <tr onclick="openPanel('${r.id}')">
+      <td><div class="patient-name">${r.patientName}</div><div class="patient-sub">DOB: ${r.dob}</div></td>
+      <td style="font-weight:600;color:var(--purple)">${r.specialist}</td>
+      <td style="max-width:200px;font-size:13px;color:var(--muted)">${r.reason.substring(0,55)}${r.reason.length>55?'...':''}</td>
+      <td><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${priorityBg[r.priority]};color:${priorityColor[r.priority]}">${r.priority}</span></td>
+      <td><span class="status-badge ${statusCls[r.status]}"><span class="status-dot"></span>${statusLabel[r.status]}</span></td>
+      <td style="font-size:13px;color:var(--muted)">${r.apptDate||'—'}</td>
+      <td onclick="event.stopPropagation()">
+        <button class="action-btn action-btn-primary" onclick="openPanel('${r.id}')">View</button>
+        <button class="action-btn" onclick="openEditModal('${r.id}')">Edit</button>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">No referrals match your filter</td></tr>`;
+}
+
+function render() {
+  renderKanban();
+  renderTable();
+  updateCounts();
+}
+
+function filterBy(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('kanban-view').style.display = v==='kanban' ? 'grid' : 'none';
+  document.getElementById('table-view').classList.toggle('visible', v==='table');
+  document.getElementById('btn-kanban').classList.toggle('active', v==='kanban');
+  document.getElementById('btn-table').classList.toggle('active', v==='table');
+}
+
+function searchReferrals(q) {
+  searchQuery = q;
+  render();
+}
+
+// ── DETAIL PANEL ──
+function openPanel(id) {
+  const r = REFERRALS.find(x => x.id === id);
+  if (!r) return;
+  activeId = id;
+  document.getElementById('panel-title').textContent = r.patientName;
+
+  document.getElementById('panel-patient').innerHTML = [
+    ['Name', r.patientName], ['Date of Birth', r.dob],
+  ].map(([l,v]) => `<div class="panel-field"><span class="panel-field-label">${l}</span><span class="panel-field-value">${v}</span></div>`).join('');
+
+  document.getElementById('panel-details').innerHTML = [
+    ['Specialist', `<strong style="color:var(--purple)">${r.specialist}</strong>`],
+    ['Preferred Clinician', r.specName||'Not specified'],
+    ['Reason', r.reason],
+    ['Priority', `<span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${priorityBg[r.priority]};color:${priorityColor[r.priority]}">${r.priority}</span>`],
+    ['Current Status', `<span class="status-badge ${statusCls[r.status]}"><span class="status-dot"></span>${statusLabel[r.status]}</span>`],
+    ['Date Referred', r.date],
+    ['Appointment Date', r.apptDate||'—'],
+  ].map(([l,v]) => `<div class="panel-field"><span class="panel-field-label">${l}</span><span class="panel-field-value">${v}</span></div>`).join('');
+
+  document.getElementById('panel-notes').textContent = r.notes || 'No clinical notes provided.';
+
+  // Status update buttons
+  const moves = statusNext[r.status] || [];
+  document.getElementById('panel-status-btns').innerHTML = moves.length
+    ? moves.map(m => `
+        <button class="status-move-btn" onclick="moveStatus('${id}','${m.next}')">
+          <span style="font-size:16px">${m.icon}</span>
+          ${m.label}
+          <span style="margin-left:auto;font-size:11px;color:var(--muted)">${statusLabel[m.next]}</span>
+        </button>
+      `).join('')
+    : `<div style="font-size:13px;color:var(--green);font-weight:600;padding:10px 0">✅ Referral complete — specialist seen</div>`;
+
+  document.getElementById('panel-edit-btn').onclick = () => { closePanel(); openEditModal(id); };
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  document.getElementById('detail-panel').classList.remove('open');
+  activeId = null;
+}
+
+function moveStatus(id, next) {
+  const r = REFERRALS.find(x => x.id === id);
+  if (!r) return;
+  r.status = next;
+  saveToStorage();
+  render();
+  openPanel(id); // refresh panel
+}
+
+// ── NEW / EDIT MODAL ──
+function openNewModal() {
+  editingId = null;
+  document.getElementById('modal-heading').textContent = 'New Referral';
+  document.getElementById('f-patient').value = '';
+  document.getElementById('f-dob').value = '';
+  document.getElementById('f-specialist').value = '';
+  document.getElementById('f-priority').value = 'Routine';
+  document.getElementById('f-reason').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('f-spec-name').value = '';
+  document.getElementById('f-appt').value = '';
+  document.getElementById('new-modal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const r = REFERRALS.find(x => x.id === id);
+  if (!r) return;
+  editingId = id;
+  document.getElementById('modal-heading').textContent = 'Edit Referral — ' + r.patientName;
+  document.getElementById('f-patient').value = r.patientName;
+  document.getElementById('f-dob').value = r.dob;
+  document.getElementById('f-specialist').value = r.specialist;
+  document.getElementById('f-priority').value = r.priority;
+  document.getElementById('f-reason').value = r.reason;
+  document.getElementById('f-notes').value = r.notes;
+  document.getElementById('f-spec-name').value = r.specName||'';
+  document.getElementById('f-appt').value = r.apptDate==='—'?'':r.apptDate;
+  document.getElementById('new-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('new-modal').classList.remove('open');
+}
+
+function saveReferral() {
+  const patient = document.getElementById('f-patient').value.trim();
+  const specialist = document.getElementById('f-specialist').value;
+  const reason = document.getElementById('f-reason').value.trim();
+  if (!patient || !specialist || !reason) {
+    alert('Please fill in patient name, specialist, and reason for referral.');
+    return;
+  }
+  const now = new Date();
+  const apptRaw = document.getElementById('f-appt').value;
+  if (editingId) {
+    const r = REFERRALS.find(x => x.id === editingId);
+    if (r) {
+      r.patientName = patient;
+      r.dob = document.getElementById('f-dob').value;
+      r.specialist = specialist;
+      r.priority = document.getElementById('f-priority').value;
+      r.reason = reason;
+      r.notes = document.getElementById('f-notes').value;
+      r.specName = document.getElementById('f-spec-name').value;
+      r.apptDate = apptRaw ? new Date(apptRaw).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    }
+  } else {
+    REFERRALS.unshift({
+      id: 'ref-' + Date.now(),
+      patientName: patient,
+      dob: document.getElementById('f-dob').value,
+      specialist,
+      specName: document.getElementById('f-spec-name').value,
+      priority: document.getElementById('f-priority').value,
+      reason,
+      notes: document.getElementById('f-notes').value,
+      status: 'pending',
+      date: now.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}),
+      apptDate: apptRaw ? new Date(apptRaw).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}) : '—',
+    });
+  }
+  saveToStorage();
+  render();
+  closeModal();
+}
+
+function saveToStorage() {
+  const live = REFERRALS.filter(r => r.id.startsWith('ref-'));
+  localStorage.setItem('requify_referrals', JSON.stringify(live));
+}
+
+// Init
+render();
+</script>
+</body>
+</html>

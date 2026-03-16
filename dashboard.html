@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Requify Health</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #0E7CF0; --blue-dark: #0A5EC2; --blue-pale: #E8F2FF;
+    --dark: #050D1A; --dark-2: #0D1B2E; --dark-3: #152338;
+    --sidebar-bg: #070F1E; --text: #0D1B2A; --muted: #5A738A;
+    --border: #E2EDF8; --white: #FFFFFF; --green: #0A9E6E;
+    --amber: #D97706; --red: #DC2626; --light: #F4F8FF;
+    --radius: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--light); display: flex; min-height: 100vh; }
+  h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px; min-height: 100vh; background: var(--sidebar-bg);
+    border-right: 1px solid rgba(14,124,240,0.12); display: flex;
+    flex-direction: column; position: fixed; top: 0; left: 0; z-index: 50;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px; padding: 20px 20px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.06); text-decoration: none;
+  }
+  .sidebar-logo-icon { width: 32px; height: 32px; background: var(--blue); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+  .sidebar-logo-icon svg { width: 18px; height: 18px; }
+  .sidebar-logo-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; color: #fff; }
+  .sidebar-logo-text span { color: var(--blue); }
+
+  .sidebar-clinic {
+    margin: 14px 12px; background: rgba(14,124,240,0.1);
+    border: 1px solid rgba(14,124,240,0.2); border-radius: 8px; padding: 10px 12px;
+  }
+  .sidebar-clinic-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .sidebar-clinic-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+  .sidebar-nav { flex: 1; padding: 8px 12px; }
+  .nav-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.25); padding: 14px 8px 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 10px;
+    border-radius: 7px; cursor: pointer; transition: all 0.15s; text-decoration: none;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); }
+  .nav-item.active { background: rgba(14,124,240,0.15); }
+  .nav-item svg { width: 16px; height: 16px; color: rgba(255,255,255,0.4); flex-shrink: 0; }
+  .nav-item.active svg { color: var(--blue); }
+  .nav-item span { font-size: 14px; color: rgba(255,255,255,0.55); font-weight: 500; }
+  .nav-item.active span { color: #fff; }
+  .nav-badge { margin-left: auto; background: var(--blue); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; }
+
+  .sidebar-bottom { padding: 12px; border-top: 1px solid rgba(255,255,255,0.06); }
+  .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; cursor: pointer; }
+  .sidebar-user:hover { background: rgba(255,255,255,0.05); }
+  .user-avatar { width: 32px; height: 32px; background: var(--blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; font-family: 'Syne', sans-serif; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: rgba(255,255,255,0.35); }
+  .logout-btn { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; padding: 4px; transition: color 0.2s; }
+  .logout-btn:hover { color: rgba(255,255,255,0.7); }
+  .logout-btn svg { width: 15px; height: 15px; }
+
+  /* MAIN */
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+
+  .topbar {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 0 28px; height: 60px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 40;
+  }
+  .topbar-title { font-size: 17px; font-weight: 700; color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 14px; }
+  .topbar-search {
+    display: flex; align-items: center; gap: 8px; background: var(--light);
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px;
+  }
+  .topbar-search svg { width: 15px; height: 15px; color: var(--muted); }
+  .topbar-search input { border: none; background: none; outline: none; font-size: 13px; color: var(--text); width: 180px; font-family: 'DM Sans', sans-serif; }
+  .topbar-search input::placeholder { color: var(--muted); }
+  .btn-new-req {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--blue); color: #fff; border: none; cursor: pointer;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px;
+    padding: 8px 16px; border-radius: 8px; transition: all 0.2s; text-decoration: none;
+  }
+  .btn-new-req:hover { background: var(--blue-dark); }
+  .btn-new-req svg { width: 14px; height: 14px; }
+
+  .content { padding: 28px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 22px; transition: all 0.2s;
+  }
+  .stat-card:hover { box-shadow: 0 4px 20px rgba(14,124,240,0.08); transform: translateY(-2px); }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .stat-label svg { width: 13px; height: 13px; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; margin-bottom: 6px; }
+  .stat-change { font-size: 12px; color: var(--green); }
+
+  /* TABLE */
+  .section-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); }
+  .section-card-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .section-card-header h3 { font-size: 15px; font-weight: 700; color: var(--text); }
+  .filter-tabs { display: flex; gap: 4px; }
+  .filter-tab {
+    padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: none; background: none; transition: all 0.15s;
+    color: var(--muted);
+  }
+  .filter-tab.active { background: var(--blue-pale); color: var(--blue); font-weight: 600; }
+  .filter-tab:hover:not(.active) { background: var(--light); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+    background: var(--light); border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--light); }
+  td { padding: 13px 16px; font-size: 14px; color: var(--text); }
+  .patient-name { font-weight: 600; }
+  .patient-dob { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600;
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status-submitted { background: #EBF4FF; color: #1D6DB5; }
+  .status-submitted .status-dot { background: #1D6DB5; }
+  .status-inprogress { background: #FFF8EB; color: var(--amber); }
+  .status-inprogress .status-dot { background: var(--amber); animation: pulse 2s infinite; }
+  .status-complete { background: #E6F9F2; color: var(--green); }
+  .status-complete .status-dot { background: var(--green); }
+  .status-delivered { background: #F3EEFF; color: #7C3AED; }
+  .status-delivered .status-dot { background: #7C3AED; }
+  .status-urgent { background: #FEF2F2; color: var(--red); }
+  .status-urgent .status-dot { background: var(--red); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .exam-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; background: var(--blue-pale); color: var(--blue);
+  }
+  .action-btn {
+    background: none; border: 1px solid var(--border); border-radius: 6px;
+    padding: 5px 10px; font-size: 12px; color: var(--muted); cursor: pointer;
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .action-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-pale); }
+  .action-btn-primary {
+    background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600;
+  }
+  .action-btn-primary:hover { background: var(--blue-dark); border-color: var(--blue-dark); color: #fff; }
+  .action-btn-archive { color: var(--muted); }
+  .action-btn-archive:hover { border-color: var(--amber); color: var(--amber); background: #FFF8EB; }
+  .action-btn-unarchive { border-color: var(--amber); color: var(--amber); background: #FFF8EB; }
+  .action-btn-unarchive:hover { border-color: var(--green); color: var(--green); background: #E6F9F2; }
+  tr.archived-row td { opacity: 0.45; text-decoration: line-through; text-decoration-color: #ccc; }
+  tr.archived-row td:last-child { opacity: 1; text-decoration: none; }
+  tr[data-status="archived"] { background: #FAFBFC; }
+
+  /* STATUS ADVANCEMENT DROPDOWN */
+  .status-menu-wrap { position: relative; display: inline-block; }
+  .status-badge-btn { cursor: pointer; border: none; background: none; padding: 0; }
+  .status-badge-btn:hover { opacity: 0.8; }
+  .status-dropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; background: var(--white); border: 1px solid var(--border); border-radius: 9px; box-shadow: 0 8px 24px rgba(14,124,240,0.14); z-index: 100; min-width: 190px; overflow: hidden; }
+  .status-dropdown.open { display: block; }
+  .status-dropdown-header { padding: 8px 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--light); }
+  .status-option { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; font-size: 13px; color: var(--text); transition: background 0.12s; border-bottom: 1px solid var(--light); }
+  .status-option:last-child { border-bottom: none; }
+  .status-option:hover { background: var(--light); }
+  .status-option svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .status-option .so-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .status-option.current { background: var(--blue-pale); color: var(--blue); font-weight: 600; }
+
+  /* EMPTY STATE */
+  .empty { text-align: center; padding: 60px; }
+  .empty svg { width: 48px; height: 48px; color: var(--border); margin-bottom: 16px; }
+  .empty h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .empty p { font-size: 14px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/>
+        <line x1="8" y1="13" x2="16" y2="13"/>
+      </svg>
+    </div>
+    <span class="sidebar-logo-text">Requify <span>Health</span></span>
+  </a>
+
+  <div class="sidebar-clinic">
+    <div class="sidebar-clinic-name">City Health Clinic</div>
+    <div class="sidebar-clinic-sub">Oshawa, Ontario</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item active" href="dashboard.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a class="nav-item" href="submit.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>New Requisition</span>
+    </a>
+    <a class="nav-item" href="requisitions.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+      <span>Requisitions</span>
+      <span class="nav-badge">8</span>
+    </a>
+    <a class="nav-item" href="referrals.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg>
+      <span>Referrals</span>
+      <span class="nav-badge" style="background:#7C3AED">6</span>
+    </a>
+
+    <div class="nav-section-label">Clinic</div>
+    <a class="nav-item" href="analytics.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Analytics</span>
+    </a>
+    <a class="nav-item" href="settings.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="sidebar-user">
+      <div class="user-avatar">DC</div>
+      <div class="user-info">
+        <div class="user-name">Dr. Chen</div>
+        <div class="user-role">Attending Physician</div>
+      </div>
+      <button class="logout-btn" onclick="window.location.href='login.html'" title="Log out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title">Dashboard</span>
+    <div class="topbar-right">
+      <div class="topbar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search patients..." oninput="filterTable(this.value)">
+      </div>
+      <a href="submit.html" class="btn-new-req">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Requisition
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
+          Total Requisitions
+        </div>
+        <div class="stat-value">24</div>
+        <div class="stat-change">↑ 8 this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          In Progress
+        </div>
+        <div class="stat-value" style="color:var(--amber)">3</div>
+        <div class="stat-change" style="color:var(--amber)">Awaiting lab update</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Completed
+        </div>
+        <div class="stat-value" style="color:var(--green)">19</div>
+        <div class="stat-change">79% completion rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Urgent
+        </div>
+        <div class="stat-value" style="color:var(--red)">1</div>
+        <div class="stat-change" style="color:var(--red)">Requires attention</div>
+      </div>
+    </div>
+
+    <!-- REQUISITIONS TABLE -->
+    <div class="section-card">
+      <div class="section-card-header">
+        <h3>Recent Requisitions</h3>
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all" onclick="setFilter('all', this)">All</button>
+          <button class="filter-tab" data-filter="submitted" onclick="setFilter('submitted', this)">Submitted</button>
+          <button class="filter-tab" data-filter="inprogress" onclick="setFilter('inprogress', this)">In Progress</button>
+          <button class="filter-tab" data-filter="complete" onclick="setFilter('complete', this)">Complete</button>
+          <button class="filter-tab" data-filter="archived" onclick="setFilter('archived', this)" id="tab-archived" style="color:var(--muted)">
+            Archived <span id="archived-count" style="background:var(--border);color:var(--muted);font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:3px">0</span>
+          </button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Patient</th>
+            <th>Exam Type</th>
+            <th>Date Submitted</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="req-table">
+          <!-- Seed rows — new submissions prepended above these -->
+          <tr data-status="complete" data-id="seed-1">
+            <td><div class="patient-name">Anna Garrett</div><div class="patient-dob">DOB: Feb 14, 1970</div></td>
+            <td><span class="exam-tag">Chest PA &amp; LAT</span></td>
+            <td>Apr 22, 2026</td>
+            <td>Routine</td>
+            <td><div class="status-menu-wrap" id="swrap-seed-1"><button class="status-badge-btn" onclick="toggleStatusMenu('seed-1')"><span class="status-badge status-complete"><span class="status-dot"></span>Complete</span></button><div class="status-dropdown" id="smenu-seed-1"></div></div></td>
+            <td>
+              <button class="action-btn action-btn-primary" onclick="viewPDF('seed-1')">View PDF</button>
+              <button class="action-btn" onclick="archiveRow('seed-1', this)" title="Archive"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            </td>
+          </tr>
+          <tr data-status="inprogress" data-id="seed-2">
+            <td><div class="patient-name">Jorge Nguyen</div><div class="patient-dob">DOB: Sep 3, 1985</div></td>
+            <td><span class="exam-tag">OB Series</span></td>
+            <td>Apr 18, 2026</td>
+            <td>Routine</td>
+            <td><div class="status-menu-wrap" id="swrap-seed-2"><button class="status-badge-btn" onclick="toggleStatusMenu('seed-2')"><span class="status-badge status-inprogress"><span class="status-dot"></span>In Progress</span></button><div class="status-dropdown" id="smenu-seed-2"></div></div></td>
+            <td>
+              <button class="action-btn" onclick="viewPDF('seed-2')">View PDF</button>
+              <button class="action-btn" onclick="archiveRow('seed-2', this)" title="Archive"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            </td>
+          </tr>
+          <tr data-status="submitted" data-id="seed-3">
+            <td><div class="patient-name">Sarah Lee</div><div class="patient-dob">DOB: Mar 19, 1992</div></td>
+            <td><span class="exam-tag">Routine Mammogram</span></td>
+            <td>Apr 14, 2026</td>
+            <td>Routine</td>
+            <td><div class="status-menu-wrap" id="swrap-seed-3"><button class="status-badge-btn" onclick="toggleStatusMenu('seed-3')"><span class="status-badge status-submitted"><span class="status-dot"></span>Submitted</span></button><div class="status-dropdown" id="smenu-seed-3"></div></div></td>
+            <td>
+              <button class="action-btn" onclick="viewPDF('seed-3')">View PDF</button>
+              <button class="action-btn" onclick="archiveRow('seed-3', this)" title="Archive"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            </td>
+          </tr>
+          <tr data-status="submitted" data-id="seed-4">
+            <td><div class="patient-name">Michael Wright</div><div class="patient-dob">DOB: Jun 7, 1966</div></td>
+            <td><span class="exam-tag" style="background:#FEF2F2;color:var(--red)">X-Ray — STAT</span></td>
+            <td>Apr 12, 2026</td>
+            <td style="color:var(--red);font-weight:600">STAT</td>
+            <td><div class="status-menu-wrap" id="swrap-seed-4"><button class="status-badge-btn" onclick="toggleStatusMenu('seed-4')"><span class="status-badge status-urgent"><span class="status-dot"></span>Urgent</span></button><div class="status-dropdown" id="smenu-seed-4"></div></div></td>
+            <td>
+              <button class="action-btn action-btn-primary" onclick="viewPDF('seed-4')">View PDF</button>
+              <button class="action-btn" onclick="archiveRow('seed-4', this)" title="Archive"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            </td>
+          </tr>
+          <tr data-status="complete" data-id="seed-5">
+            <td><div class="patient-name">Eva Adams</div><div class="patient-dob">DOB: Nov 28, 1978</div></td>
+            <td><span class="exam-tag">Bone Scan</span></td>
+            <td>Apr 10, 2026</td>
+            <td>Routine</td>
+            <td><div class="status-menu-wrap" id="swrap-seed-5"><button class="status-badge-btn" onclick="toggleStatusMenu('seed-5')"><span class="status-badge status-complete"><span class="status-dot"></span>Complete</span></button><div class="status-dropdown" id="smenu-seed-5"></div></div></td>
+            <td>
+              <button class="action-btn action-btn-primary" onclick="viewPDF('seed-5')">View PDF</button>
+              <button class="action-btn" onclick="archiveRow('seed-5', this)" title="Archive"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- PDF VIEWER MODAL -->
+<div id="pdf-modal" style="display:none;position:fixed;inset:0;background:rgba(5,13,26,0.82);z-index:300;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;width:min(720px,95vw);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.4);">
+    <!-- Modal header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--light);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:32px;height:32px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        </div>
+        <div>
+          <div id="modal-title" style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:var(--text);">Requisition PDF</div>
+          <div id="modal-ref" style="font-size:11px;color:var(--muted);">Loading...</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="modal-download-btn" style="display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+        <button onclick="closePDFModal()" style="background:none;border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;">×</button>
+      </div>
+    </div>
+    <!-- PDF canvas area -->
+    <div style="overflow-y:auto;padding:24px;background:#e8e8e8;flex:1;">
+      <canvas id="pdf-canvas" style="display:block;margin:0 auto;box-shadow:0 4px 24px rgba(0,0,0,0.18);background:#fff;"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- NEW SUBMISSION TOAST -->
+<div id="new-toast" style="display:none;position:fixed;bottom:28px;right:28px;z-index:400;background:var(--dark);border:1px solid rgba(14,124,240,0.3);border-radius:12px;padding:14px 18px;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:320px;animation:slideUp 0.4s ease;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:36px;height:36px;background:#E6F9F2;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A9E6E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div>
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#fff;">New Requisition Submitted</div>
+      <div id="toast-name" style="font-size:12px;color:rgba(255,255,255,0.55);margin-top:2px;"></div>
+    </div>
+    <button onclick="document.getElementById('new-toast').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:18px;margin-left:4px;">×</button>
+  </div>
+</div>
+
+<style>
+@keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes rowIn { from{background:#E8F2FF;} to{background:transparent;} }
+.new-row { animation: rowIn 2s ease forwards; }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// Load clinic settings
+(function(){ const s={...{clinicName:'City Health Clinic',provider:'Dr. Alex Chen'},...JSON.parse(localStorage.getItem('requify_clinic_settings')||'{}')}; const cn=document.querySelector('.sidebar-clinic-name');if(cn)cn.textContent=s.clinicName; const un=document.querySelector('.user-name');if(un)un.textContent=s.provider; })();
+let allRequisitions = {}; // id -> data
+
+// Seed requisitions for demo PDF viewing
+const seedData = {
+  'seed-1': {
+    patientName:'Anna Garrett', patientDob:'1970-02-14', healthCard:'3456-789-012', versionCode:'AC',
+    patientPhone:'(416) 555-0134', patientEmail:'anna.garrett@email.com',
+    providerName:'Dr. Alex Chen', billingNo:'ON-2847391',
+    examType:'X-Ray', priority:'Routine',
+    xray:['Chest PA & LAT R','Sternum'],
+    us:[], bmd:[], breast:[], echo:[], nuclear:[], vein:[],
+    clinicalHistory:'Patient presenting with persistent cough for 3 weeks. Rule out pneumonia or pleural effusion.',
+    labName:'Oshawa Diagnostic Lab', deliveryMethod:'eFax',
+    ref:'REQ-2026-0021', dateSubmitted:'Apr 22, 2026', status:'complete'
+  },
+  'seed-2': {
+    patientName:'Jorge Nguyen', patientDob:'1985-09-03', healthCard:'5678-901-234', versionCode:'JN',
+    patientPhone:'(905) 555-0187', patientEmail:'jorge.nguyen@email.com',
+    providerName:'Dr. Alex Chen', billingNo:'ON-2847391',
+    examType:'Ultrasound', priority:'Routine',
+    xray:[],
+    us:['OB Series (NT 11-14wk + Anatomy 18-20wk)','Anatomy Scan (18-20 weeks)'],
+    bmd:[], breast:[], echo:[], nuclear:[], vein:[],
+    clinicalHistory:'Routine OB series. Patient is 18 weeks pregnant. No complications reported.',
+    labName:'Durham Imaging Centre', deliveryMethod:'Email',
+    ref:'REQ-2026-0022', dateSubmitted:'Apr 18, 2026', status:'inprogress'
+  },
+  'seed-3': {
+    patientName:'Sarah Lee', patientDob:'1992-03-19', healthCard:'7890-123-456', versionCode:'SL',
+    patientPhone:'(647) 555-0212', patientEmail:'sarah.lee@email.com',
+    providerName:'Dr. Alex Chen', billingNo:'ON-2847391',
+    examType:'Imaging', priority:'Routine',
+    xray:[],
+    us:[],
+    bmd:[], breast:['Mammography Routine'], echo:[], nuclear:[], vein:[],
+    clinicalHistory:'Annual screening mammogram. No prior history of breast cancer. Family history: mother had breast cancer age 62.',
+    labName:'Oshawa Diagnostic Lab', deliveryMethod:'eFax',
+    ref:'REQ-2026-0023', dateSubmitted:'Apr 14, 2026', status:'submitted'
+  },
+  'seed-4': {
+    patientName:'Michael Wright', patientDob:'1966-06-07', healthCard:'2345-678-901', versionCode:'MW',
+    patientPhone:'(416) 555-0098', patientEmail:'michael.wright@email.com',
+    providerName:'Dr. Alex Chen', billingNo:'ON-2847391',
+    examType:'X-Ray', priority:'STAT',
+    xray:['Chest PA & LAT R','Sternum','SC Joints'],
+    us:[], bmd:[], breast:[], echo:[], nuclear:[], vein:[],
+    clinicalHistory:'Patient presenting with acute chest pain and shortness of breath onset 2 hours ago. Rule out pneumothorax. STAT.',
+    labName:'Oshawa Diagnostic Lab', deliveryMethod:'eFax',
+    ref:'REQ-2026-0024', dateSubmitted:'Apr 12, 2026', status:'submitted'
+  },
+  'seed-5': {
+    patientName:'Eva Adams', patientDob:'1978-11-28', healthCard:'9012-345-678', versionCode:'EA',
+    patientPhone:'(905) 555-0245', patientEmail:'eva.adams@email.com',
+    providerName:'Dr. Alex Chen', billingNo:'ON-2847391',
+    examType:'Imaging', priority:'Routine',
+    xray:[],
+    us:[],
+    bmd:['BMD Routine'], breast:[], echo:[], nuclear:['Bone Scan'], vein:[],
+    clinicalHistory:'Follow-up bone scan for known osteopenia. Previous scan 2 years ago showed mild lumbar reduction.',
+    labName:'Durham Imaging Centre', deliveryMethod:'Email',
+    ref:'REQ-2026-0020', dateSubmitted:'Apr 10, 2026', status:'complete'
+  },
+};
+Object.assign(allRequisitions, seedData);
+
+// Load any submitted requisitions from localStorage
+function loadStoredReqs() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('requify_submissions') || '[]');
+    stored.forEach(req => {
+      allRequisitions[req.id] = req;
+      // Check if row already exists
+      if (!document.querySelector(`tr[data-id="${req.id}"]`)) {
+        prependRow(req, false);
+      }
+    });
+    updateStats();
+  } catch(e) {}
+}
+
+function prependRow(req, animate) {
+  const tbody = document.getElementById('req-table');
+  const isStat = req.priority === 'STAT';
+  const priorityColor = isStat ? `style="color:var(--red);font-weight:600"` : '';
+  const examStyle = isStat ? `style="background:#FEF2F2;color:var(--red)"` : '';
+  const statusClass = isStat ? 'status-urgent' : 'status-submitted';
+  const statusLabel = isStat ? 'Urgent' : 'Submitted';
+  const btnClass = 'action-btn action-btn-primary';
+
+  // Lab + delivery info (new submissions have labName)
+  const labName = req.labName || req.deliveryMethod || 'Lab';
+  const notified = req.notifyMethod && req.notifyMethod !== 'none';
+  const smsTag = notified
+    ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#E6F9F2;color:var(--green);font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:6px">✓ SMS</span>`
+    : '';
+
+  // Patient name — handle both data shapes
+  const ptName = req.patientName || ((req.ptFirst||'') + ' ' + (req.ptLast||'')).trim() || '—';
+  const ptDob = req.patientDob || req.ptDob || '';
+  const examType = req.examType || 'Imaging';
+
+  const tr = document.createElement('tr');
+  tr.dataset.status = 'submitted';
+  tr.dataset.id = req.id;
+  if (animate) tr.classList.add('new-row');
+  tr.innerHTML = `
+    <td>
+      <div class="patient-name">${ptName}</div>
+      <div class="patient-dob">DOB: ${formatDOB(ptDob)}</div>
+    </td>
+    <td><span class="exam-tag" ${examStyle}>${examType}${isStat ? ' — STAT' : ''}</span></td>
+    <td>
+      <div style="font-size:13px">${req.dateSubmitted || '—'}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:1px">${labName}${smsTag}</div>
+    </td>
+    <td ${priorityColor}>${req.priority || 'Routine'}</td>
+    <td>
+      <div class="status-menu-wrap" id="swrap-${req.id}">
+        <button class="status-badge-btn" onclick="toggleStatusMenu('${req.id}')">
+          <span class="status-badge ${statusClass}"><span class="status-dot"></span>${statusLabel}</span>
+        </button>
+        <div class="status-dropdown" id="smenu-${req.id}"></div>
+      </div>
+    </td>
+    <td>
+      <button class="${btnClass}" onclick="viewPDF('${req.id}')">View PDF</button>
+      <button class="action-btn action-btn-archive" onclick="archiveRow('${req.id}', this)" title="Archive">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      </button>
+    </td>
+  `;
+  tbody.insertBefore(tr, tbody.firstChild);
+}
+
+function formatDOB(dob) {
+  if (!dob) return '—';
+  try {
+    const d = new Date(dob + 'T00:00:00');
+    return d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch(e) { return dob; }
+}
+
+function updateStats() {
+  const stored = JSON.parse(localStorage.getItem('requify_submissions') || '[]');
+  const total = 24 + stored.length;
+  document.querySelector('.stats-grid .stat-card:first-child .stat-value').textContent = total;
+  document.querySelector('.stats-grid .stat-card:first-child .stat-change').textContent = `↑ ${8 + stored.length} this month`;
+}
+
+// Filter & search
+// ── ARCHIVE ──
+// Load archived IDs from localStorage
+let archivedIds = new Set(JSON.parse(localStorage.getItem('requify_archived') || '[]'));
+
+function saveArchived() {
+  localStorage.setItem('requify_archived', JSON.stringify([...archivedIds]));
+}
+
+function updateArchivedCount() {
+  const count = archivedIds.size;
+  const badge = document.getElementById('archived-count');
+  if (badge) badge.textContent = count;
+}
+
+function archiveRow(id, btn) {
+  const tr = btn.closest('tr');
+  if (!tr) return;
+  archivedIds.add(id);
+  saveArchived();
+  tr.dataset.status = 'archived';
+  tr.classList.add('archived-row');
+  // Swap button to unarchive
+  btn.classList.remove('action-btn-archive');
+  btn.classList.add('action-btn-unarchive');
+  btn.title = 'Unarchive';
+  btn.onclick = () => unarchiveRow(id, btn);
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`;
+  updateArchivedCount();
+  // If we're not on "all" or "archived" filter, hide the row
+  const activeFilter = document.querySelector('.filter-tab.active')?.dataset?.filter || 'all';
+  if (activeFilter !== 'all' && activeFilter !== 'archived') {
+    tr.style.display = 'none';
+  }
+  // Show brief toast
+  showArchiveToast('Archived · <a href="#" onclick="setFilter(\'archived\', document.getElementById(\'tab-archived\'))" style="color:#fff;text-decoration:underline">View archived</a>');
+}
+
+function unarchiveRow(id, btn) {
+  const tr = btn.closest('tr');
+  if (!tr) return;
+  archivedIds.delete(id);
+  saveArchived();
+  // Restore original status from allRequisitions or data attribute
+  const originalStatus = allRequisitions[id]?.status || 'submitted';
+  tr.dataset.status = originalStatus;
+  tr.classList.remove('archived-row');
+  btn.classList.remove('action-btn-unarchive');
+  btn.classList.add('action-btn-archive');
+  btn.title = 'Archive';
+  btn.onclick = () => archiveRow(id, btn);
+  btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`;
+  updateArchivedCount();
+  showArchiveToast('Restored from archive');
+}
+
+function showArchiveToast(msg) {
+  let t = document.getElementById('archive-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'archive-toast';
+    t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:500;background:#1a2a3a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-family:DM Sans,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s;white-space:nowrap';
+    document.body.appendChild(t);
+  }
+  t.innerHTML = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+// Apply archived state on load
+function applyArchivedState() {
+  document.querySelectorAll('#req-table tr').forEach(tr => {
+    const id = tr.dataset.id;
+    if (!id) return;
+    if (archivedIds.has(id)) {
+      tr.dataset.status = 'archived';
+      tr.classList.add('archived-row');
+      const archBtn = tr.querySelector('[title="Archive"]');
+      if (archBtn) {
+        archBtn.classList.add('action-btn-unarchive');
+        archBtn.title = 'Unarchive';
+        archBtn.onclick = () => unarchiveRow(id, archBtn);
+      }
+    }
+  });
+  updateArchivedCount();
+}
+
+function setFilter(filter, btn) {
+  currentFilter = filter;
+  if (btn) {
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (btn.dataset) btn.dataset.filter = filter;
+  }
+  document.querySelectorAll('#req-table tr').forEach(row => {
+    const status = row.dataset.status;
+    if (filter === 'all') {
+      row.style.display = status === 'archived' ? 'none' : '';
+    } else if (filter === 'archived') {
+      row.style.display = status === 'archived' ? '' : 'none';
+    } else {
+      row.style.display = status === filter ? '' : 'none';
+    }
+  });
+}
+
+function filterTable(query) {
+  document.querySelectorAll('#req-table tr').forEach(row => {
+    const name = row.querySelector('.patient-name')?.textContent.toLowerCase() || '';
+    row.style.display = name.includes(query.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ── PDF VIEWER ────────────────────────────────────────────────────────────────
+let currentPDFDoc = null;
+
+function buildPDFBytes(data) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'letter' });
+  const W=216, H=279, M=7;
+
+  function sf(sz,st,col){doc.setFontSize(sz);doc.setFont('helvetica',st||'normal');doc.setTextColor(...(col||[13,27,42]));}
+  function bar(x,y,w,h,r,g,b){doc.setFillColor(r,g,b);doc.rect(x,y,w,h,'F');}
+  function hline(x,y,w){doc.setDrawColor(180,190,200);doc.setLineWidth(0.2);doc.line(x,y,x+w,y);}
+  function vline(x,y,h){doc.setDrawColor(180,190,200);doc.setLineWidth(0.2);doc.line(x,y,x,y+h);}
+  function outline(x,y,w,h){doc.setDrawColor(160,170,180);doc.setLineWidth(0.25);doc.rect(x,y,w,h);}
+  function secBar(x,y,w,lbl,dark){bar(x,y,w,5.5,...(dark?[28,38,50]:[55,70,82]));sf(7,'bold',[255,255,255]);doc.text(lbl,x+2,y+3.9);}
+  function cell(x,y,w,lbl,val){sf(5.5,'bold',[100,110,120]);doc.text(lbl,x+1,y+2.2);sf(8,'normal',[10,20,35]);doc.text(String(val||'').substring(0,Math.floor(w/2)+2),x+1,y+6.5);}
+  function chk(x,y,ticked,lbl,mw){
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x,y,3.2,3.2);
+    if(ticked){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+0.4,y+1.7,x+1.3,y+2.8);doc.line(x+1.3,y+2.8,x+3.0,y+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);sf(6.8,'normal',[20,30,45]);
+    doc.text((mw?doc.splitTextToSize(lbl,mw)[0]:lbl),x+4.2,y+2.6);
+  }
+  function subH(x,y,lbl){sf(6.5,'bold',[20,70,160]);doc.text(lbl,x,y);}
+  const LH=4.2;
+
+  // Header
+  bar(0,0,W,6.5,14,100,210);
+  sf(8,'bold',[255,255,255]);doc.text('REQUIFY HEALTH — Digital Requisition',M,4.5);
+  sf(7,'normal',[255,255,255]);doc.text('REF: '+(data.ref||'—')+'   Generated: '+new Date().toLocaleDateString('en-CA'),120,4.5);
+  bar(0,6.5,W,9,28,38,50);
+  sf(12,'bold',[255,255,255]);doc.text('GENERAL REQUISITION FORM',M,13);
+  sf(7,'bold',[255,255,255]);doc.text('FOR APPOINTMENT BOOKING CALL 519-256-4914  OR FAX: 519-256-3221',110,10);
+  sf(6,'normal',[200,215,230]);doc.text('Please provide 24 hours advance notice. Arrive 10 minutes early with health card.',110,13.5);
+
+  let Y=17;
+  const colW=(W-M*2)/2-1;
+  const ptX=M, pvX=M+colW+2, infoH=40;
+
+  // Patient box
+  outline(ptX,Y,colW,infoH); secBar(ptX,Y,colW,'PATIENT INFORMATION',true);
+  let py=Y+7;
+  cell(ptX+1,py,colW/2-1,'LAST NAME',data.patientName?.split(' ').slice(-1)[0]||data.ptLast||'—');
+  vline(ptX+colW/2,py,9);
+  cell(ptX+colW/2+1,py,colW/2-2,'FIRST NAME',data.patientName?.split(' ')[0]||data.ptFirst||'—');
+  py+=10; hline(ptX,py,colW);
+  const rw=colW/3;
+  cell(ptX+1,py,rw-1,'PHONE',data.patientPhone||data.ptCell||'—');
+  vline(ptX+rw,py,9);
+  cell(ptX+rw+1,py,rw-1,'DATE OF BIRTH',data.patientDob||data.ptDob||'—');
+  vline(ptX+rw*2,py,9);
+  cell(ptX+rw*2+1,py,rw-1,'EXAM DATE',data.dateSubmitted||'—');
+  py+=10; hline(ptX,py,colW);
+  cell(ptX+1,py,colW*0.5,'HEALTH CARD',(data.healthCard||data.ptHcard||'—')+(data.versionCode||data.ptVer?' '+(data.versionCode||data.ptVer):''));
+  vline(ptX+colW*0.5,py,9);
+  cell(ptX+colW*0.5+1,py,colW*0.49,'LAB',data.labName||'—');
+
+  // Provider box
+  outline(pvX,Y,colW,infoH); secBar(pvX,Y,colW,'PROVIDER INFORMATION',true);
+  let pvy=Y+7;
+  cell(pvX+1,pvy,colW*0.65,'PROVIDER NAME (PRINT)',data.providerName||data.provName||'—');
+  vline(pvX+colW*0.65,pvy,9);
+  cell(pvX+colW*0.65+1,pvy,colW*0.34,'BILLING NO.',data.billingNo||data.provBilling||'—');
+  pvy+=10; hline(pvX,pvy,colW);
+  sf(5.5,'bold',[100,110,120]);doc.text('PROVIDER SIGNATURE',pvX+1,pvy+2.2);
+  vline(pvX+colW*0.65,pvy,10);
+  cell(pvX+colW*0.65+1,pvy,colW*0.34,'PRIORITY',data.priority==='STAT'?'★ STAT':data.priority||'Routine');
+  if(data.priority==='STAT'){doc.setTextColor(200,30,30);sf(8,'bold',[200,30,30]);doc.text('★ STAT',pvX+colW*0.65+2,pvy+6.5);}
+  pvy+=11; hline(pvX,pvy,colW);
+  cell(pvX+1,pvy,colW-2,'CLINICAL HX / REASON',data.clinicalHistory||data.clinicalHx||'—');
+
+  Y+=infoH+2;
+
+  // Studies summary section
+  const studyText = data.studies || [...(data.xray||[]),...(data.us||[])].join(', ') || data.examType || 'See selected exams below';
+  bar(M,Y,W-M*2,5.5,14,100,210);
+  sf(7,'bold',[255,255,255]);doc.text('EXAMS ORDERED: '+studyText.substring(0,90)+(studyText.length>90?'...':''),M+2,Y+3.9);
+  Y+=7;
+
+  // Delivery strip
+  if(data.labName||data.deliveryMethod||data.smsText) {
+    bar(M,Y,W-M*2,5,55,70,82);
+    sf(6.5,'normal',[200,215,230]);
+    const delInfo = (data.labName||'Lab')+' · '+(data.deliveryMethod||'eFax').toUpperCase()+(data.notifyMethod&&data.notifyMethod!=='none'?' · Patient SMS ✓':'');
+    doc.text('SENT TO: '+delInfo, M+2, Y+3.5);
+    Y+=6;
+  }
+
+  // Exam panels
+  const panW=colW;
+  const xX=M, uX=M+panW+2;
+
+  // X-RAY panel
+  secBar(xX,Y,panW,'NO APPOINTMENT REQUIRED',true); Y+=5.5;
+  secBar(xX,Y,panW,'X-RAY'); Y+=5.5;
+  const xrayStartY=Y;
+  const xc=panW/3;
+  const xX1=xX+1, xX2=xX+xc+1, xX3=xX+xc*2+1;
+  let xY1=Y, xY2=Y, xY3=Y;
+  const xray = data.xray||[];
+  const us = data.us||[];
+
+  subH(xX1,xY1+1,'CHEST'); xY1+=LH;
+  [['Chest PA & LAT','Chest PA & LAT R'],['Sternum','Sternum'],['SC Joints','SC Joints'],['Ribs R','Ribs R'],['Ribs L','Ribs L']].forEach(([l,v])=>{chk(xX1,xY1,xray.includes(v),l);xY1+=LH;});
+  xY1+=1.5; subH(xX1,xY1+1,'SPINE & PELVIS'); xY1+=LH;
+  ['Cervical Spine','Thoracic Spine','Lumbar Spine','Sacrum & Coccyx','Pelvis','SI Joints','Scoliosis Series'].forEach(v=>{chk(xX1,xY1,xray.includes(v),v);xY1+=LH;});
+
+  subH(xX2,xY2+1,'ABDOMEN'); xY2+=LH;
+  ['KUB/Flat Plate','Acute (3 views)'].forEach(v=>{chk(xX2,xY2,xray.includes(v),v);xY2+=LH;});
+  xY2+=1.5; subH(xX2,xY2+1,'SKELETAL SURVEY'); xY2+=LH;
+  ['Bone Age','Metastatic Survey'].forEach(v=>{chk(xX2,xY2,xray.includes(v),v);xY2+=LH;});
+  xY2+=1.5; subH(xX2,xY2+1,'HEAD & NECK'); xY2+=LH;
+  ['Skull','Facial Bones','Nasal Bones','Mandible','TM Joints','Soft Tissue Neck','Orbits MRI/FB','Orbits Trauma'].forEach(v=>{chk(xX2,xY2,xray.includes(v),v);xY2+=LH;});
+
+  subH(xX3,xY3+1,'UPPER EXTREMITIES'); xY3+=LH;
+  sf(6,'bold',[100,110,120]);doc.text('R    L',xX3,xY3+2);xY3+=LH;
+  ['Shoulder','Clavicle','AC Joints','Scapula','Humerus','Elbow','Forearm','Wrist','Hand','Digits'].forEach(v=>{
+    const r=xray.includes(v+' R'),l=xray.includes(v+' L');
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(xX3,xY3,3.2,3.2);if(r){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(xX3+0.4,xY3+1.7,xX3+1.3,xY3+2.8);doc.line(xX3+1.3,xY3+2.8,xX3+3.0,xY3+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(xX3+4.5,xY3,3.2,3.2);if(l){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(xX3+4.9,xY3+1.7,xX3+5.8,xY3+2.8);doc.line(xX3+5.8,xY3+2.8,xX3+7.5,xY3+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);sf(6.8,'normal',[20,30,45]);doc.text(v,xX3+9.5,xY3+2.6);xY3+=LH;
+  });
+  xY3+=1.5; subH(xX3,xY3+1,'LOWER EXTREMITIES'); xY3+=LH;
+  sf(6,'bold',[100,110,120]);doc.text('R    L',xX3,xY3+2);xY3+=LH;
+  ['Hip','Femur','Knee','Tibia & Fibula','Ankle','Foot','Calcaneus','Toes'].forEach(v=>{
+    const r=xray.includes(v+' R'),l=xray.includes(v+' L');
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(xX3,xY3,3.2,3.2);if(r){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(xX3+0.4,xY3+1.7,xX3+1.3,xY3+2.8);doc.line(xX3+1.3,xY3+2.8,xX3+3.0,xY3+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(xX3+4.5,xY3,3.2,3.2);if(l){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(xX3+4.9,xY3+1.7,xX3+5.8,xY3+2.8);doc.line(xX3+5.8,xY3+2.8,xX3+7.5,xY3+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);sf(6.8,'normal',[20,30,45]);doc.text(v,xX3+9.5,xY3+2.6);xY3+=LH;
+  });
+  const xRayBottom=Math.max(xY1,xY2,xY3)+2;
+  vline(xX+xc,xrayStartY,xRayBottom-xrayStartY);
+  vline(xX+xc*2,xrayStartY,xRayBottom-xrayStartY);
+  outline(xX,Y-11,panW,xRayBottom-Y+11);
+
+  // ULTRASOUND panel
+  let uY=Y-11;
+  secBar(uX,uY,panW,'APPOINTMENT REQUIRED FOR ALL EXAMS BELOW',true);uY+=5.5;
+  secBar(uX,uY,panW,'ULTRASOUND');uY+=5.5;
+  const usStart=uY;
+  const uc=panW/3;
+  const uX1=uX+1, uX2=uX+uc+1, uX3=uX+uc*2+1;
+  let uY1=uY, uY2=uY, uY3=uY;
+
+  subH(uX1,uY1+1,'GENERAL');uY1+=LH;
+  [['Abdomen & Pelvis Complete','Abdomen & Pelvis Complete (incl. Transvaginal for females)'],
+   ['No Transvaginal US','No TV (No Transvaginal)'],
+   ['Abdomen Complete','Abdomen Complete (limited bladder & lower quadrants)'],
+   ['Portal Hypertension','Portal Hypertension/Cirrhosis'],
+   ['Cirrhosis/Chronic Hep','Cirrhosis/Chronic Hepatitis Screening (q6mo)'],
+   ['Abdomen Only','Abdomen Only'],['Kidneys & Bladder','Kidneys & Bladder'],
+   ['R/O Appendicitis','R/O Appendicitis (incl. adjacent DDx)'],
+   ['R/O Pyloric Stenosis','R/O Pyloric Stenosis (0-6 months)']
+  ].forEach(([l,v])=>{chk(uX1,uY1,us.includes(v),l,uc-5);uY1+=LH;});
+  uY1+=1.5;subH(uX1,uY1+1,'PELVIS');uY1+=LH;
+  [['Female Pelvis (incl. TV)','Female Pelvis (incl. Transvaginal)'],
+   ['Male Pelvis','Male Pelvis (excludes transrectal)'],
+   ['Transrectal Prostate','Transrectal Prostate (incl. Bladder)'],
+   ['Bladder','Bladder'],['Incl. Postvoid Residual','Include Postvoid Residual/PVR']
+  ].forEach(([l,v])=>{chk(uX1,uY1,us.includes(v),l,uc-5);uY1+=LH;});
+  uY1+=1.5;subH(uX1,uY1+1,'SMALL PARTS');uY1+=LH;
+  [['Thyroid Only','Thyroid Only'],['Complete Neck','Complete Neck (incl. Thyroid & Salivary Glands)'],
+   ['Lump / Lymph Node','Lump/Lymph Nodes/Soft Tissue'],['Groin for Hernia','Groin for Hernia'],
+   ['Scrotum (Testicular)','Scrotum (Testicular)'],['Abdominal Wall','Abdominal Wall']
+  ].forEach(([l,v])=>{chk(uX1,uY1,us.includes(v),l,uc-5);uY1+=LH;});
+
+  subH(uX2,uY2+1,'MUSCULOSKELETAL');uY2+=LH;
+  chk(uX2,uY2,us.includes('MSK - Include Relevant X-Rays'),'Incl. Relevant X-Rays');uY2+=LH;
+  ['Rotator Cuff','Elbow','Wrist','Hand','Hip','Knee','Ankle','Foot','Other'].forEach(v=>{
+    const r=us.includes('MSK '+v+' R'),l=us.includes('MSK '+v+' L');
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(uX2,uY2,3.2,3.2);if(r){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(uX2+0.4,uY2+1.7,uX2+1.3,uY2+2.8);doc.line(uX2+1.3,uY2+2.8,uX2+3.0,uY2+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(uX2+4.5,uY2,3.2,3.2);if(l){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(uX2+4.9,uY2+1.7,uX2+5.8,uY2+2.8);doc.line(uX2+5.8,uY2+2.8,uX2+7.5,uY2+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);sf(6.8,'normal',[20,30,45]);doc.text(v,uX2+9.5,uY2+2.6);uY2+=LH;
+  });
+  uY2+=2;subH(uX2,uY2+1,'VASCULAR');uY2+=LH;
+  ['Carotid Arteries','CIMT','Aorta/Iliac (AAA Screen)'].forEach(v=>{chk(uX2,uY2,us.includes(v),v);uY2+=LH;});
+  uY2+=1.5;sf(6.5,'bold',[30,80,160]);doc.text('Lower Extremity',uX2,uY2+1);uY2+=LH;
+  ['Arterial','Venous R/O DVT','Venous Insufficiency'].forEach(v=>{
+    const r=us.includes('LE '+v+' R'),l=us.includes('LE '+v+' L'),b=us.includes('LE '+v+' B');
+    [r,l,b].forEach((t,i)=>{doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(uX2+i*4.5,uY2,3.2,3.2);if(t){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(uX2+i*4.5+0.4,uY2+1.7,uX2+i*4.5+1.3,uY2+2.8);doc.line(uX2+i*4.5+1.3,uY2+2.8,uX2+i*4.5+3.0,uY2+0.4);}doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);});
+    sf(6.8,'normal',[20,30,45]);doc.text(v,uX2+15,uY2+2.6);uY2+=LH;
+  });
+  chk(uX2,uY2,us.includes('Include Venous Consultation'),'Incl. Venous Consult');uY2+=LH;
+  uY2+=1.5;sf(6.5,'bold',[30,80,160]);doc.text('Upper Extremity',uX2,uY2+1);uY2+=LH;
+  ['Arterial','Venous R/O DVT'].forEach(v=>{
+    const r=us.includes('UE '+v+' R'),l=us.includes('UE '+v+' L');
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(uX2,uY2,3.2,3.2);if(r){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(uX2+0.4,uY2+1.7,uX2+1.3,uY2+2.8);doc.line(uX2+1.3,uY2+2.8,uX2+3.0,uY2+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(uX2+4.5,uY2,3.2,3.2);if(l){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(uX2+4.9,uY2+1.7,uX2+5.8,uY2+2.8);doc.line(uX2+5.8,uY2+2.8,uX2+7.5,uY2+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);sf(6.8,'normal',[20,30,45]);doc.text(v,uX2+9.5,uY2+2.6);uY2+=LH;
+  });
+
+  subH(uX3,uY3+1,'OBSTETRICAL');uY3+=LH;
+  const lmpDate=data.lmpDate||data.obLmp||'';
+  if(lmpDate){sf(6,'italic',[100,110,120]);doc.text('LMP: '+lmpDate,uX3,uY3+1);uY3+=LH;}
+  [['1st Trimester (<11 wks)','OB 1st Trimester (<11 weeks)'],
+   ['OB Series (NT 11-14wk)','OB Series (NT 11-14wk + Anatomy 18-20wk)'],
+   ['EFTS/NT (11-14 wks)','EFTS/NT (11-14 weeks)'],
+   ['Anatomy Scan (18-20 wks)','Anatomy Scan (18-20 weeks)'],
+   ['2nd/3rd Trimester (NR)','2nd/3rd Trimester (Non Routine)']
+  ].forEach(([l,v])=>{chk(uX3,uY3,us.includes(v),l,uc-3);uY3+=LH;});
+  uY3+=2;subH(uX3,uY3+1,'BONE MINERAL DENSITY');uY3+=LH;
+  [['First','BMD First'],['Routine','BMD Routine'],['High Risk','BMD High Risk']].forEach(([l,v])=>{chk(uX3,uY3,(data.bmd||[]).includes(v),l);uY3+=LH;});
+  uY3+=2;subH(uX3,uY3+1,'DIGITAL BREAST IMAGING');uY3+=LH;
+  sf(6,'italic',[130,50,50]);doc.text('(Appointment Required)',uX3,uY3+1);uY3+=LH;
+  [['Mammography — Routine','Mammography Routine'],['Mammography — Diagnostic','Mammography Diagnostic'],
+   ['Mammography — OB-SP','Mammography OB-SP'],['Male Breast Bilateral US','Male Breast Bilateral US']
+  ].forEach(([l,v])=>{chk(uX3,uY3,(data.breast||[]).includes(v),l,uc-3);uY3+=LH;});
+  sf(6.5,'normal',[30,40,55]);doc.text('Breast US:',uX3,uY3+2.5);
+  ['Breast US R','Breast US L','Breast US B'].forEach((v,i)=>{
+    const bx=uX3+14+i*7;
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(bx,uY3,3.2,3.2);
+    if((data.breast||[]).includes(v)){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(bx+0.4,uY3+1.7,bx+1.3,uY3+2.8);doc.line(bx+1.3,uY3+2.8,bx+3.0,uY3+0.4);}
+    doc.setDrawColor(100,110,120);sf(6.5,'normal',[30,40,55]);doc.text(['R','L','B'][i],bx+3.8,uY3+2.5);
+  });
+  uY3+=LH+2;subH(uX3,uY3+1,'ECHOCARDIOGRAPHY');uY3+=LH;
+  chk(uX3,uY3,(data.echo||[]).includes('2D Echocardiogram'),'2D Echocardiogram');uY3+=LH;
+  uY3+=2;subH(uX3,uY3+1,'NUCLEAR MEDICINE');uY3+=LH;
+  [['Nuclear Cardiac Stress Test','Nuclear Cardiac Stress Test'],['Persantine','Persantine'],
+   ['HIDA','HIDA'],['Bone Scan','Bone Scan'],
+   ['Myocardial Wall Motion (MUGA)','Myocardial Wall Motion (MUGA) with Ejection Fraction']
+  ].forEach(([l,v])=>{chk(uX3,uY3,(data.nuclear||[]).includes(v),l,uc-3);uY3+=LH;});
+
+  const usPanelBottom=Math.max(uY1,uY2,uY3)+2;
+  outline(uX,uY-11,panW,usPanelBottom-uY+11);
+  vline(uX+uc,usStart,usPanelBottom-usStart);
+  vline(uX+uc*2,usStart,usPanelBottom-usStart);
+
+  const sectionBottom=Math.max(xRayBottom,usPanelBottom)+2;
+  if(sectionBottom<H-14){
+    secBar(M,sectionBottom,W-M*2,'VEIN CLINIC');
+    let vy=sectionBottom+6;
+    chk(M+2,vy,(data.vein||[]).includes('Vein Clinic Assessment/Consultation'),'Assessment / Consultation');
+    sf(6,'normal',[100,110,120]);
+    doc.text('Please attach present and past medical history, list of current medications, physical findings and relevant test results.',M+2,vy+5);
+  }
+
+  bar(0,H-6,W,6,14,100,210);
+  sf(6.5,'normal',[255,255,255]);
+  doc.text('Requify Health · requifyhealth.com · PHIPA Compliant · '+(data.labName||'Clear Medical Imaging')+' · clearimaging.ca · All facilities are scent-free.',M,H-2.5);
+
+  return doc.output('arraybuffer');
+}
+
+async function viewPDF(id) {
+  const data = allRequisitions[id];
+  if (!data) { alert('No data found for this requisition.'); return; }
+
+  const modal = document.getElementById('pdf-modal');
+  modal.style.display = 'flex';
+  const ptName = data.patientName || ((data.ptFirst||'')+' '+(data.ptLast||'')).trim() || '—';
+  document.getElementById('modal-title').textContent = ptName + ' — ' + (data.examType || 'Imaging');
+  document.getElementById('modal-ref').textContent = data.ref || id;
+
+  // Show loading state
+  const canvas = document.getElementById('pdf-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 600; canvas.height = 400;
+  ctx.fillStyle = '#F4F8FF'; ctx.fillRect(0,0,600,400);
+  ctx.fillStyle = '#5A738A'; ctx.font = '14px DM Sans, sans-serif';
+  ctx.textAlign = 'center'; ctx.fillText('Loading PDF...', 300, 200);
+
+  // Load PDF.js once
+  if (!window.pdfjsLib) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    document.head.appendChild(script);
+    await new Promise(res => script.onload = res);
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  // Normalise field names for both seed and new submission data shapes
+  const norm = {
+    ...data,
+    patientName: ptName,
+    patientDob:    data.patientDob   || data.ptDob      || '',
+    healthCard:    data.healthCard   || data.ptHcard    || '',
+    versionCode:   data.versionCode  || data.ptVer      || '',
+    patientPhone:  data.patientPhone || data.ptCell     || '',
+    providerName:  data.providerName || data.provName   || '',
+    billingNo:     data.billingNo    || data.provBilling|| '',
+    clinicalHistory: data.clinicalHistory || data.clinicalHx || '',
+    xray:    data.xray    || [],
+    us:      data.us      || [],
+    bmd:     data.bmd     || [],
+    breast:  data.breast  || [],
+    echo:    data.echo    || [],
+    nuclear: data.nuclear || [],
+    vein:    data.vein    || [],
+  };
+
+  let pdfSource;
+  if (data.pdfDataUrl) {
+    pdfSource = { url: data.pdfDataUrl };
+  } else {
+    const pdfBytes = buildPDFBytes(norm);
+    pdfSource = { data: pdfBytes };
+  }
+
+  // Wire up download
+  document.getElementById('modal-download-btn').onclick = () => {
+    if (data.pdfDataUrl) {
+      const a = document.createElement('a'); a.href = data.pdfDataUrl; a.download = 'Requify_'+(data.ref||id)+'.pdf'; a.click();
+    } else {
+      const bytes = buildPDFBytes(norm);
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'Requify_'+(data.ref||id)+'.pdf'; a.click();
+    }
+  };
+
+  try {
+    const pdfDoc = await pdfjsLib.getDocument(pdfSource).promise;
+    const page = await pdfDoc.getPage(1);
+    const modalWidth = Math.min(720, window.innerWidth * 0.9) - 48;
+    const viewport = page.getViewport({ scale: 1 });
+    const scale = modalWidth / viewport.width;
+    const scaledViewport = page.getViewport({ scale });
+    canvas.width = scaledViewport.width;
+    canvas.height = scaledViewport.height;
+    canvas.style.width = scaledViewport.width + 'px';
+    canvas.style.height = scaledViewport.height + 'px';
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: scaledViewport }).promise;
+  } catch(e) {
+    console.error('PDF render error:', e);
+    ctx.fillStyle = '#F4F8FF'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = '#DC2626'; ctx.font = '13px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Could not render PDF. Try downloading instead.', canvas.width/2, canvas.height/2);
+  }
+}
+
+function closePDFModal() {
+  document.getElementById('pdf-modal').style.display = 'none';
+  const canvas = document.getElementById('pdf-canvas');
+  canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// Close modal on backdrop click
+document.getElementById('pdf-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePDFModal();
+});
+
+// Check for new submission from submit page
+function checkNewSubmission() {
+  try {
+    const pending = localStorage.getItem('requify_pending');
+    if (pending) {
+      const req = JSON.parse(pending);
+      localStorage.removeItem('requify_pending');
+      // Normalise field names so allRequisitions works for both shapes
+      if (!req.patientName && req.ptFirst) req.patientName = (req.ptFirst + ' ' + req.ptLast).trim();
+      if (!req.patientDob && req.ptDob) req.patientDob = req.ptDob;
+      if (!req.examType) req.examType = (req.xray?.length ? 'X-Ray' : req.us?.length ? 'Ultrasound' : 'Imaging');
+      if (!req.priority) req.priority = req.stat || 'Routine';
+      // Save to submissions list
+      const stored = JSON.parse(localStorage.getItem('requify_submissions') || '[]');
+      stored.unshift(req);
+      localStorage.setItem('requify_submissions', JSON.stringify(stored));
+      allRequisitions[req.id] = req;
+      prependRow(req, true);
+      updateStats();
+      // Show toast with lab + SMS info
+      const labInfo = req.labName ? ' → ' + req.labName : '';
+      const smsInfo = req.notifyMethod && req.notifyMethod !== 'none' ? ' · SMS sent ✓' : '';
+      document.getElementById('toast-name').textContent = req.patientName + ' · ' + req.examType + labInfo + smsInfo + ' · ' + req.ref;
+      const toast = document.getElementById('new-toast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 6000);
+      // Auto-simulate eFax delivery after 8 seconds
+      simulateDelivery(req.id);
+    }
+  } catch(e) { console.error('checkNewSubmission error:', e); }
+}
+
+// ── STATUS ADVANCEMENT ──
+const STATUS_FLOW = {
+  submitted:  { label:'Submitted',    cls:'status-submitted',  dot:'#1D6DB5',  next:['delivered','inprogress','complete'] },
+  delivered:  { label:'Delivered to Lab', cls:'status-delivered', dot:'#7C3AED', next:['inprogress','complete'] },
+  inprogress: { label:'In Progress',  cls:'status-inprogress', dot:'#D97706',  next:['complete'] },
+  complete:   { label:'Complete',     cls:'status-complete',   dot:'#0A9E6E',  next:[] },
+};
+// urgent is displayed for STAT submitted
+const STATUS_NEXT_LABELS = {
+  delivered:  '✓ Mark Delivered to Lab',
+  inprogress: '⚡ Mark In Progress',
+  complete:   '✅ Mark Complete',
+};
+
+// Status stored per-id
+let statusOverrides = JSON.parse(localStorage.getItem('requify_status_overrides') || '{}');
+
+function saveStatusOverrides() {
+  localStorage.setItem('requify_status_overrides', JSON.stringify(statusOverrides));
+}
+
+function getStatus(id) {
+  if (statusOverrides[id]) return statusOverrides[id];
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  return tr?.dataset.status || 'submitted';
+}
+
+function buildStatusMenu(id) {
+  const menu = document.getElementById('smenu-' + id);
+  if (!menu) return;
+  const current = getStatus(id);
+  const flow = STATUS_FLOW[current] || STATUS_FLOW.submitted;
+  const nexts = flow.next;
+  menu.innerHTML = `
+    <div class="status-dropdown-header">Update Status</div>
+    <div class="status-option current">
+      <span class="so-dot" style="background:${flow.dot}"></span>
+      ${flow.label} <span style="margin-left:auto;font-size:10px;opacity:0.6">current</span>
+    </div>
+    ${nexts.map(s => {
+      const sf = STATUS_FLOW[s];
+      return `<div class="status-option" onclick="advanceStatus('${id}','${s}')">
+        <span class="so-dot" style="background:${sf.dot}"></span>
+        ${STATUS_NEXT_LABELS[s] || sf.label}
+      </div>`;
+    }).join('')}
+    ${nexts.length === 0 ? '<div class="status-option" style="color:var(--muted);cursor:default">No further updates</div>' : ''}
+  `;
+}
+
+function toggleStatusMenu(id) {
+  buildStatusMenu(id);
+  const menu = document.getElementById('smenu-' + id);
+  const isOpen = menu?.classList.contains('open');
+  // Close all open menus
+  document.querySelectorAll('.status-dropdown.open').forEach(m => m.classList.remove('open'));
+  if (!isOpen && menu) menu.classList.add('open');
+}
+
+// Close menus on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.status-menu-wrap')) {
+    document.querySelectorAll('.status-dropdown.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+function advanceStatus(id, newStatus) {
+  statusOverrides[id] = newStatus;
+  saveStatusOverrides();
+  // Update allRequisitions
+  if (allRequisitions[id]) allRequisitions[id].status = newStatus;
+  // Also update in localStorage submissions
+  try {
+    const stored = JSON.parse(localStorage.getItem('requify_submissions') || '[]');
+    const idx = stored.findIndex(r => r.id === id);
+    if (idx >= 0) { stored[idx].status = newStatus; localStorage.setItem('requify_submissions', JSON.stringify(stored)); }
+  } catch(e) {}
+  // Update row
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) tr.dataset.status = newStatus;
+  // Update badge
+  const wrap = document.getElementById('swrap-' + id);
+  if (wrap) {
+    const flow = STATUS_FLOW[newStatus] || STATUS_FLOW.submitted;
+    wrap.querySelector('.status-badge-btn').innerHTML =
+      `<span class="status-badge ${flow.cls}"><span class="status-dot"></span>${flow.label}</span>`;
+  }
+  // Close menu
+  const menu = document.getElementById('smenu-' + id);
+  if (menu) menu.classList.remove('open');
+  // Toast
+  showArchiveToast(`Status updated → ${STATUS_FLOW[newStatus]?.label || newStatus}`);
+  // Re-apply filter
+  const activeFilter = document.querySelector('.filter-tab.active')?.dataset?.filter || 'all';
+  setFilter(activeFilter, document.querySelector('.filter-tab.active'));
+}
+
+// Apply saved status overrides on load
+function applyStatusOverrides() {
+  Object.entries(statusOverrides).forEach(([id, status]) => {
+    const tr = document.querySelector(`tr[data-id="${id}"]`);
+    if (!tr) return;
+    tr.dataset.status = status;
+    const wrap = document.getElementById('swrap-' + id);
+    if (wrap) {
+      const flow = STATUS_FLOW[status] || STATUS_FLOW.submitted;
+      wrap.querySelector('.status-badge-btn').innerHTML =
+        `<span class="status-badge ${flow.cls}"><span class="status-dot"></span>${flow.label}</span>`;
+    }
+  });
+}
+
+// ── AUTO-DELIVERY SIMULATION ──
+// After a new submission, auto-advance to "delivered" after 8 seconds to show the demo flow
+function simulateDelivery(id) {
+  setTimeout(() => {
+    const current = getStatus(id);
+    if (current === 'submitted') {
+      advanceStatus(id, 'delivered');
+      showArchiveToast(`✓ Delivered to lab — eFax confirmed for ${allRequisitions[id]?.patientName || 'patient'}`);
+    }
+  }, 8000);
+}
+
+// Init
+loadStoredReqs();
+checkNewSubmission();
+applyArchivedState();
+applyStatusOverrides();
+</script>
+</body>
+</html>

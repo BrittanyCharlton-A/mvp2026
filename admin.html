@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Requify Ops — Internal Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --blue:#0E7CF0;--blue-dark:#0A5EC2;--blue-pale:#E8F2FF;
+    --dark:#050D1A;--sidebar-bg:#03080F;--text:#0D1B2A;
+    --muted:#5A738A;--border:#E2EDF8;--white:#FFFFFF;
+    --green:#0A9E6E;--green-pale:#E6F9F2;
+    --amber:#D97706;--amber-pale:#FFF8EB;
+    --red:#DC2626;--red-pale:#FEF2F2;
+    --purple:#7C3AED;--purple-pale:#F3EEFF;
+    --light:#F4F8FF;--radius:10px;
+    --sidebar-w:220px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--light);display:flex;min-height:100vh;font-size:14px;}
+  h1,h2,h3,h4,h5{font-family:'Syne',sans-serif;}
+
+  /* ── SIDEBAR ── */
+  .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--sidebar-bg);border-right:1px solid rgba(14,124,240,0.15);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:50;}
+  .sidebar-brand{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,0.06);}
+  .brand-row{display:flex;align-items:center;gap:8px;}
+  .brand-icon{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+  .brand-icon svg{width:15px;height:15px;}
+  .brand-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;}
+  .brand-name span{color:var(--blue);}
+  .brand-tag{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:3px;}
+  .sidebar-nav{flex:1;padding:8px 10px;overflow-y:auto;}
+  .nav-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.2);padding:12px 8px 5px;}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:all 0.15s;text-decoration:none;margin-bottom:1px;}
+  .nav-item:hover{background:rgba(255,255,255,0.06);}
+  .nav-item.active{background:rgba(14,124,240,0.18);}
+  .nav-item svg{width:15px;height:15px;color:rgba(255,255,255,0.35);flex-shrink:0;}
+  .nav-item.active svg{color:var(--blue);}
+  .nav-item-label{font-size:13px;color:rgba(255,255,255,0.5);font-weight:500;}
+  .nav-item.active .nav-item-label{color:#fff;}
+  .nav-badge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;}
+  .nb-red{background:var(--red);color:#fff;}
+  .nb-blue{background:var(--blue);color:#fff;}
+  .nb-amber{background:var(--amber);color:#fff;}
+  .sidebar-footer{padding:10px;border-top:1px solid rgba(255,255,255,0.06);}
+  .admin-user{display:flex;align-items:center;gap:8px;padding:7px;border-radius:7px;}
+  .admin-avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:'Syne',sans-serif;flex-shrink:0;}
+  .admin-name{font-size:12px;font-weight:600;color:#fff;}
+  .admin-role{font-size:10px;color:rgba(255,255,255,0.3);}
+
+  /* ── MAIN ── */
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+  .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+  .topbar-title{font-size:16px;font-weight:700;color:var(--text);}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+  .system-status{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:var(--green-pale);border:1px solid rgba(10,158,110,0.2);font-size:12px;color:var(--green);font-weight:600;}
+  .status-pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .topbar-search{display:flex;align-items:center;gap:7px;background:var(--light);border:1px solid var(--border);border-radius:7px;padding:6px 10px;}
+  .topbar-search svg{width:13px;height:13px;color:var(--muted);}
+  .topbar-search input{border:none;background:none;outline:none;font-size:13px;color:var(--text);width:160px;font-family:'DM Sans',sans-serif;}
+  .topbar-search input::placeholder{color:var(--muted);}
+  .content{padding:24px;flex:1;}
+
+  /* ── PANELS ── */
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* ── KPI ROW ── */
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .kpi{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s;}
+  .kpi:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(14,124,240,0.08);}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;}
+  .kpi.k-blue::before{background:var(--blue);}
+  .kpi.k-green::before{background:var(--green);}
+  .kpi.k-amber::before{background:var(--amber);}
+  .kpi.k-red::before{background:var(--red);}
+  .kpi-label{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:5px;}
+  .kpi-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;color:var(--text);}
+  .kpi-sub{font-size:11px;margin-top:5px;}
+  .up{color:var(--green);}
+  .down{color:var(--red);}
+  .neutral{color:var(--muted);}
+
+  /* ── CARDS ── */
+  .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:18px;}
+  .card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .card-title{font-size:14px;font-weight:700;color:var(--text);}
+  .card-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+  .card-body{padding:18px;}
+
+  /* ── TABLES ── */
+  table{width:100%;border-collapse:collapse;}
+  thead th{text-align:left;padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);background:var(--light);border-bottom:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid var(--border);transition:background 0.12s;cursor:pointer;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--light);}
+  td{padding:11px 14px;font-size:13px;color:var(--text);vertical-align:middle;}
+  .td-muted{color:var(--muted);}
+  .td-bold{font-weight:600;}
+
+  /* ── BADGES ── */
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;}
+  .b-green{background:var(--green-pale);color:var(--green);}
+  .b-blue{background:var(--blue-pale);color:var(--blue);}
+  .b-amber{background:var(--amber-pale);color:var(--amber);}
+  .b-red{background:var(--red-pale);color:var(--red);}
+  .b-purple{background:var(--purple-pale);color:var(--purple);}
+  .b-gray{background:var(--light);color:var(--muted);}
+  .bdot{width:5px;height:5px;border-radius:50%;}
+
+  /* ── BUTTONS ── */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all 0.15s;border:none;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover{background:var(--blue-dark);}
+  .btn-ghost{background:var(--white);color:var(--text);border:1.5px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--blue);color:var(--blue);}
+  .btn-danger{background:var(--red-pale);color:var(--red);border:1px solid rgba(220,38,38,0.2);}
+  .btn-danger:hover{background:var(--red);color:#fff;}
+  .btn-success{background:var(--green-pale);color:var(--green);border:1px solid rgba(10,158,110,0.2);}
+  .btn-success:hover{background:var(--green);color:#fff;}
+  .btn svg{width:13px;height:13px;}
+
+  /* ── GRID 2 ── */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+  /* ── ALERT BAR ── */
+  .alert-bar{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:8px;margin-bottom:14px;font-size:13px;}
+  .alert-red{background:var(--red-pale);border:1px solid rgba(220,38,38,0.2);color:var(--red);}
+  .alert-amber{background:var(--amber-pale);border:1px solid rgba(217,119,6,0.2);color:var(--amber);}
+  .alert-green{background:var(--green-pale);border:1px solid rgba(10,158,110,0.2);color:var(--green);}
+  .alert-bar svg{width:15px;height:15px;flex-shrink:0;}
+  .alert-bar strong{font-weight:700;}
+
+  /* ── TIMELINE ── */
+  .timeline-item{display:flex;gap:12px;margin-bottom:14px;}
+  .t-dot-col{display:flex;flex-direction:column;align-items:center;}
+  .t-dot{width:10px;height:10px;border-radius:50%;margin-top:2px;flex-shrink:0;}
+  .t-line{width:1px;background:var(--border);flex:1;margin-top:4px;}
+  .t-content{flex:1;padding-bottom:4px;}
+  .t-label{font-size:13px;font-weight:600;color:var(--text);}
+  .t-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+
+  /* ── DELIVERY LOG ── */
+  .delivery-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--light);}
+  .delivery-row:last-child{border-bottom:none;}
+  .delivery-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .delivery-icon svg{width:14px;height:14px;}
+  .delivery-info{flex:1;}
+  .delivery-title{font-size:13px;font-weight:600;color:var(--text);}
+  .delivery-meta{font-size:11px;color:var(--muted);margin-top:1px;}
+
+  /* ── CLINIC ROW ── */
+  .clinic-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--light);}
+  .clinic-row:last-child{border-bottom:none;}
+  .clinic-avatar{width:36px;height:36px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;font-family:'Syne',sans-serif;flex-shrink:0;}
+  .clinic-info{flex:1;}
+  .clinic-name{font-size:13px;font-weight:700;color:var(--text);}
+  .clinic-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .clinic-actions{display:flex;gap:6px;}
+
+  /* ── FORM ── */
+  .form-group{margin-bottom:14px;}
+  .form-label{font-size:11px;font-weight:700;color:var(--text);margin-bottom:5px;display:block;letter-spacing:0.02em;}
+  .form-input{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:all 0.2s;}
+  .form-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(14,124,240,0.08);}
+  .form-select{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;background:var(--white);}
+  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+  /* ── TOGGLE ── */
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--light);}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-info .tl{font-size:13px;font-weight:500;color:var(--text);}
+  .toggle-info .ts{font-size:11px;color:var(--muted);margin-top:1px;}
+  .toggle{position:relative;width:38px;height:21px;flex-shrink:0;}
+  .toggle input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:99px;cursor:pointer;transition:0.2s;}
+  .toggle-slider:before{content:'';position:absolute;width:15px;height:15px;left:3px;top:3px;background:white;border-radius:50%;transition:0.2s;}
+  .toggle input:checked + .toggle-slider{background:var(--blue);}
+  .toggle input:checked + .toggle-slider:before{transform:translateX(17px);}
+
+  /* ── MODAL ── */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,13,26,0.7);z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:var(--white);border-radius:14px;width:min(520px,94vw);max-height:90vh;overflow-y:auto;animation:popIn 0.3s ease;}
+  @keyframes popIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .modal-title{font-size:16px;font-weight:700;color:var(--text);}
+  .modal-close{background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:16px;color:var(--muted);}
+  .modal-body{padding:22px;}
+  .modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+
+  /* ── CHART WRAP ── */
+  .chart-h220{position:relative;height:220px;}
+  .chart-h160{position:relative;height:160px;}
+
+  /* ── MISC ── */
+  .divider{height:1px;background:var(--border);margin:16px 0;}
+  .tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+  .empty-state{text-align:center;padding:48px 24px;color:var(--muted);}
+  .empty-state svg{width:40px;height:40px;margin:0 auto 12px;display:block;opacity:0.3;}
+
+  .section-tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--light);border:1px solid var(--border);border-radius:8px;padding:3px;width:fit-content;}
+  .stab{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--muted);transition:all 0.15s;}
+  .stab.active{background:var(--white);color:var(--text);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-row">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>
+      </div>
+      <span class="brand-name">Requify <span>Ops</span></span>
+    </div>
+    <div class="brand-tag">Internal · Admin Only</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Overview</div>
+    <a class="nav-item active" onclick="showPanel('overview',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span class="nav-item-label">Dashboard</span>
+    </a>
+    <a class="nav-item" onclick="showPanel('alerts',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="nav-item-label">Alerts</span>
+      <span class="nav-badge nb-red">2</span>
+    </a>
+
+    <div class="nav-label">Clinics</div>
+    <a class="nav-item" onclick="showPanel('clinics',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-item-label">All Clinics</span>
+      <span class="nav-badge nb-blue">4</span>
+    </a>
+    <a class="nav-item" onclick="showPanel('onboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span class="nav-item-label">Onboard Clinic</span>
+    </a>
+
+    <div class="nav-label">Delivery</div>
+    <a class="nav-item" onclick="showPanel('delivery',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span class="nav-item-label">Delivery Log</span>
+      <span class="nav-badge nb-amber">1</span>
+    </a>
+    <a class="nav-item" onclick="showPanel('labs',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18"/></svg>
+      <span class="nav-item-label">Lab Directory</span>
+    </a>
+
+    <div class="nav-label">Support</div>
+    <a class="nav-item" onclick="showPanel('support',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <span class="nav-item-label">Support Tickets</span>
+      <span class="nav-badge nb-red">3</span>
+    </a>
+    <a class="nav-item" onclick="showPanel('audit',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+      <span class="nav-item-label">Audit Log</span>
+    </a>
+
+    <div class="nav-label">Business</div>
+    <a class="nav-item" onclick="showPanel('revenue',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      <span class="nav-item-label">Revenue</span>
+    </a>
+    <a class="nav-item" onclick="showPanel('system',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <span class="nav-item-label">System Health</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="admin-user">
+      <div class="admin-avatar">RH</div>
+      <div style="flex:1">
+        <div class="admin-name">Requify Admin</div>
+        <div class="admin-role">Super Admin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">Operations Dashboard</span>
+    <div class="topbar-right">
+      <div class="system-status">
+        <div class="status-pulse"></div>
+        All systems operational
+      </div>
+      <div class="topbar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search clinics, tickets...">
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══════════════════════════════════════════
+         PANEL: DASHBOARD
+    ══════════════════════════════════════════ -->
+    <div class="panel active" id="panel-overview">
+      <div class="kpi-row">
+        <div class="kpi k-blue" onclick="showPanel('clinics',document.querySelector('.nav-item:nth-child(4)'))">
+          <div class="kpi-label">Active Clinics</div>
+          <div class="kpi-value" style="color:var(--blue)">4</div>
+          <div class="kpi-sub up">↑ 2 this month</div>
+        </div>
+        <div class="kpi k-green">
+          <div class="kpi-label">Requisitions sent (30d)</div>
+          <div class="kpi-value" style="color:var(--green)">187</div>
+          <div class="kpi-sub up">↑ 34% vs last month</div>
+        </div>
+        <div class="kpi k-amber" onclick="showPanel('delivery',document.querySelector('.nav-item:nth-child(7)'))">
+          <div class="kpi-label">Delivery failures (7d)</div>
+          <div class="kpi-value" style="color:var(--amber)">1</div>
+          <div class="kpi-sub neutral">Resent successfully</div>
+        </div>
+        <div class="kpi k-red" onclick="showPanel('support',document.querySelector('.nav-item:nth-child(9)'))">
+          <div class="kpi-label">Open tickets</div>
+          <div class="kpi-value" style="color:var(--red)">3</div>
+          <div class="kpi-sub down">1 urgent</div>
+        </div>
+      </div>
+
+      <div class="alert-bar alert-red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div><strong>Urgent:</strong> eFax delivery failure for REQ-2026-0031 — City Health Clinic → Oshawa Diagnostic Lab. <a href="#" onclick="showPanel('delivery',null)" style="color:var(--red);text-decoration:underline">View & resend →</a></div>
+      </div>
+      <div class="alert-bar alert-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div><strong>Trial expiring:</strong> Westside Family Practice trial ends in 3 days. <a href="#" style="color:var(--amber);text-decoration:underline">Convert to paid →</a></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Requisitions over time</div><div class="card-sub">Daily volume across all clinics</div></div></div>
+          <div class="card-body"><div class="chart-h220"><canvas id="chart-volume"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Recent activity</div><div class="card-sub">Last 10 events across platform</div></div></div>
+          <div class="card-body" style="padding:14px 18px">
+            <div class="timeline-item"><div class="t-dot-col"><div class="t-dot" style="background:var(--green)"></div><div class="t-line"></div></div><div class="t-content"><div class="t-label">REQ-2026-0038 delivered</div><div class="t-meta">City Health → Oshawa Diagnostic · eFax · 2 min ago</div></div></div>
+            <div class="timeline-item"><div class="t-dot-col"><div class="t-dot" style="background:var(--blue)"></div><div class="t-line"></div></div><div class="t-content"><div class="t-label">New clinic onboarded</div><div class="t-meta">Durham Women's Health · Dr. Priya Nair · 18 min ago</div></div></div>
+            <div class="timeline-item"><div class="t-dot-col"><div class="t-dot" style="background:var(--red)"></div><div class="t-line"></div></div><div class="t-content"><div class="t-label">Delivery failure — REQ-2026-0031</div><div class="t-meta">Fax line busy · Auto-retry in 5 min · 34 min ago</div></div></div>
+            <div class="timeline-item"><div class="t-dot-col"><div class="t-dot" style="background:var(--green)"></div><div class="t-line"></div></div><div class="t-content"><div class="t-label">REQ-2026-0030 completed</div><div class="t-meta">Oshawa Diagnostic marked results ready · 1h ago</div></div></div>
+            <div class="timeline-item"><div class="t-dot-col"><div class="t-dot" style="background:var(--purple)"></div></div><div class="t-content"><div class="t-label">Support ticket opened</div><div class="t-meta">Westside Family Practice — login issue · 2h ago</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Clinic performance snapshot</div><button class="btn btn-ghost" onclick="showPanel('clinics',null)">View all</button></div>
+        <table>
+          <thead><tr><th>Clinic</th><th>Plan</th><th>Reqs (30d)</th><th>Delivery rate</th><th>Status</th><th>MRR</th></tr></thead>
+          <tbody>
+            <tr onclick="showPanel('clinics',null)"><td class="td-bold">City Health Clinic</td><td><span class="badge b-blue">Professional</span></td><td>87</td><td><span style="color:var(--green);font-weight:600">99.1%</span></td><td><span class="badge b-green"><span class="bdot" style="background:var(--green)"></span>Active</span></td><td class="td-bold">$299</td></tr>
+            <tr onclick="showPanel('clinics',null)"><td class="td-bold">Durham Women's Health</td><td><span class="badge b-gray">Starter</span></td><td>43</td><td><span style="color:var(--green);font-weight:600">100%</span></td><td><span class="badge b-green"><span class="bdot" style="background:var(--green)"></span>Active</span></td><td class="td-bold">$99</td></tr>
+            <tr onclick="showPanel('clinics',null)"><td class="td-bold">Westside Family Practice</td><td><span class="badge b-amber">Trial</span></td><td>31</td><td><span style="color:var(--green);font-weight:600">97.8%</span></td><td><span class="badge b-amber"><span class="bdot" style="background:var(--amber)"></span>Trial · 3d left</span></td><td class="td-bold">—</td></tr>
+            <tr onclick="showPanel('clinics',null)"><td class="td-bold">Oshawa Walk-In Centre</td><td><span class="badge b-gray">Starter</span></td><td>26</td><td><span style="color:var(--green);font-weight:600">100%</span></td><td><span class="badge b-green"><span class="bdot" style="background:var(--green)"></span>Active</span></td><td class="td-bold">$99</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PANEL: ALERTS
+    ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-alerts">
+      <div class="alert-bar alert-red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div><strong>2 active alerts require attention</strong></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Active Alerts</div></div>
+        <table>
+          <thead><tr><th>Severity</th><th>Description</th><th>Clinic</th><th>Time</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="badge b-red">Critical</span></td>
+              <td class="td-bold">eFax delivery failure — REQ-2026-0031</td>
+              <td>City Health Clinic</td>
+              <td class="td-muted">34 min ago</td>
+              <td><button class="btn btn-danger" onclick="alert('Resending fax to (905) 555-0200...\n\nIn production: Documo API retry triggered.')">Resend fax</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge b-amber">Warning</span></td>
+              <td class="td-bold">Trial expiring in 3 days — no payment method on file</td>
+              <td>Westside Family Practice</td>
+              <td class="td-muted">Expires Apr 18</td>
+              <td><button class="btn btn-success" onclick="alert('Email sent to westside@familypractice.ca with upgrade link.')">Send upgrade email</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Resolved (last 7 days)</div></div>
+        <table>
+          <thead><tr><th>Severity</th><th>Description</th><th>Resolved by</th><th>Time</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge b-gray">Warning</span></td><td>Slow PDF generation — Firebase cold start</td><td>Auto-resolved</td><td class="td-muted">Apr 10</td></tr>
+            <tr><td><span class="badge b-gray">Info</span></td><td>Twilio SMS rate limit hit — burst of submissions</td><td>Queue processed</td><td class="td-muted">Apr 8</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PANEL: ALL CLINICS
+    ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-clinics">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="section-tabs">
+          <button class="stab active">All (4)</button>
+          <button class="stab">Active (3)</button>
+          <button class="stab">Trial (1)</button>
+          <button class="stab">Churned (0)</button>
+        </div>
+        <button class="btn btn-primary" onclick="showPanel('onboard',null)">+ Onboard Clinic</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Clinic</th><th>Contact</th><th>Plan</th><th>Reqs sent</th><th>Delivery</th><th>Labs configured</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="td-bold">City Health Clinic</div><div class="td-muted" style="font-size:11px">Oshawa, ON</div></td>
+              <td><div>Dr. Alex Chen</div><div class="td-muted" style="font-size:11px">alex@cityhealthclinic.ca</div></td>
+              <td><span class="badge b-blue">Professional · $299/mo</span></td>
+              <td>87</td>
+              <td><span style="color:var(--green);font-weight:600">99.1%</span></td>
+              <td>3 labs</td>
+              <td class="td-muted">Mar 1, 2026</td>
+              <td><button class="btn btn-ghost" onclick="openClinicModal()">Manage</button></td>
+            </tr>
+            <tr>
+              <td><div class="td-bold">Durham Women's Health</div><div class="td-muted" style="font-size:11px">Ajax, ON</div></td>
+              <td><div>Dr. Priya Nair</div><div class="td-muted" style="font-size:11px">p.nair@durhamwomens.ca</div></td>
+              <td><span class="badge b-gray">Starter · $99/mo</span></td>
+              <td>43</td>
+              <td><span style="color:var(--green);font-weight:600">100%</span></td>
+              <td>2 labs</td>
+              <td class="td-muted">Mar 18, 2026</td>
+              <td><button class="btn btn-ghost" onclick="openClinicModal()">Manage</button></td>
+            </tr>
+            <tr>
+              <td><div class="td-bold">Westside Family Practice</div><div class="td-muted" style="font-size:11px">Whitby, ON</div></td>
+              <td><div>Dr. James Osei</div><div class="td-muted" style="font-size:11px">josei@westsidefp.ca</div></td>
+              <td><span class="badge b-amber">Trial · expires Apr 18</span></td>
+              <td>31</td>
+              <td><span style="color:var(--green);font-weight:600">97.8%</span></td>
+              <td>1 lab</td>
+              <td class="td-muted">Apr 1, 2026</td>
+              <td><button class="btn btn-ghost" onclick="openClinicModal()">Manage</button></td>
+            </tr>
+            <tr>
+              <td><div class="td-bold">Oshawa Walk-In Centre</div><div class="td-muted" style="font-size:11px">Oshawa, ON</div></td>
+              <td><div>Admin Team</div><div class="td-muted" style="font-size:11px">admin@oshawawalkin.ca</div></td>
+              <td><span class="badge b-gray">Starter · $99/mo</span></td>
+              <td>26</td>
+              <td><span style="color:var(--green);font-weight:600">100%</span></td>
+              <td>2 labs</td>
+              <td class="td-muted">Apr 5, 2026</td>
+              <td><button class="btn btn-ghost" onclick="openClinicModal()">Manage</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PANEL: ONBOARD CLINIC
+    ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-onboard">
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <div class="card-header"><div><div class="card-title">Clinic information</div><div class="card-sub">Step 1 of 3</div></div></div>
+            <div class="card-body">
+              <div class="form-row-2">
+                <div class="form-group"><label class="form-label">Clinic name *</label><input class="form-input" placeholder="e.g. Lakeview Medical Clinic"></div>
+                <div class="form-group"><label class="form-label">City *</label><input class="form-input" placeholder="e.g. Oshawa"></div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group"><label class="form-label">Province</label><select class="form-select"><option>Ontario</option><option>British Columbia</option><option>Alberta</option><option>Quebec</option></select></div>
+                <div class="form-group"><label class="form-label">OHIP Billing No.</label><input class="form-input" placeholder="ON-XXXXXXX"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Clinic address</label><input class="form-input" placeholder="Street address, city, postal code"></div>
+              <div class="form-row-2">
+                <div class="form-group"><label class="form-label">Clinic phone</label><input class="form-input" placeholder="(905) 555-0000"></div>
+                <div class="form-group"><label class="form-label">Clinic fax (return fax)</label><input class="form-input" placeholder="(905) 555-0001"></div>
+              </div>
+              <div class="divider"></div>
+              <div class="form-group"><label class="form-label">Primary provider name *</label><input class="form-input" placeholder="Dr. First Last"></div>
+              <div class="form-row-2">
+                <div class="form-group"><label class="form-label">Provider email *</label><input class="form-input" type="email" placeholder="doctor@clinic.ca"></div>
+                <div class="form-group"><label class="form-label">Temp password</label><input class="form-input" value="Req2026!" readonly></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div><div class="card-title">Plan & billing</div><div class="card-sub">Step 2 of 3</div></div></div>
+            <div class="card-body">
+              <div class="form-row-2">
+                <div class="form-group"><label class="form-label">Plan</label>
+                  <select class="form-select">
+                    <option>60-day free trial</option>
+                    <option>Starter — $99/mo</option>
+                    <option>Professional — $299/mo</option>
+                    <option>Enterprise — custom</option>
+                  </select>
+                </div>
+                <div class="form-group"><label class="form-label">Trial end date</label><input class="form-input" type="date"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Internal notes</label><textarea class="form-input" style="min-height:70px;resize:vertical" placeholder="How we met them, any special setup, follow-up reminders..."></textarea></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-header"><div><div class="card-title">Lab delivery setup</div><div class="card-sub">Step 3 of 3 — add their labs</div></div></div>
+            <div class="card-body">
+              <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Add the labs this clinic sends to. We deliver via eFax or email — the lab doesn't need a Requify account.</p>
+              <div id="lab-entries">
+                <div class="card" style="margin-bottom:10px">
+                  <div class="card-body" style="padding:14px">
+                    <div class="form-group"><label class="form-label">Lab name</label><input class="form-input" value="Oshawa Diagnostic Lab"></div>
+                    <div class="form-row-2">
+                      <div class="form-group"><label class="form-label">Fax number</label><input class="form-input" value="(905) 555-0200"></div>
+                      <div class="form-group"><label class="form-label">Intake email</label><input class="form-input" value="intake@oshawadiag.ca"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Delivery method</label>
+                      <select class="form-select"><option>eFax (recommended)</option><option>Email</option><option>Both</option></select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:18px" onclick="addLabEntry()">+ Add another lab</button>
+              <div class="divider"></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="tl">Send welcome email to clinic</div><div class="ts">Login link + getting started guide</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="tl">Enable patient SMS notifications</div><div class="ts">Via Twilio — ~$0.01/text</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div class="toggle-row"><div class="toggle-info"><div class="tl">Add to delivery monitoring</div><div class="ts">Alert us on any fax failures</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+              <div style="margin-top:18px">
+                <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px" onclick="submitOnboard()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Create clinic & send welcome email
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PANEL: DELIVERY LOG
+    ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-delivery">
+      <div class="kpi-row" style="grid-template-columns:repeat(4,1fr)">
+        <div class="kpi k-green"><div class="kpi-label">Delivered (7d)</div><div class="kpi-value" style="color:var(--green)">64</div><div class="kpi-sub up">98.5% success rate</div></div>
+        <div class="kpi k-red"><div class="kpi-label">Failed (7d)</div><div class="kpi-value" style="color:var(--red)">1</div><div class="kpi-sub neutral">1 pending retry</div></div>
+        <div class="kpi k-blue"><div class="kpi-label">Via eFax</div><div class="kpi-value" style="color:var(--blue)">48</div><div class="kpi-sub neutral">75% of deliveries</div></div>
+        <div class="kpi k-blue"><div class="kpi-label">Via email</div><div class="kpi-value">16</div><div class="kpi-sub neutral">25% of deliveries</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Delivery log</div><div style="display:flex;gap:8px"><button class="btn btn-ghost">Export CSV</button></div></div>
+        <table>
+          <thead><tr><th>Ref #</th><th>Clinic</th><th>Lab</th><th>Method</th><th>Status</th><th>Timestamp</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr style="background:var(--red-pale)">
+              <td style="font-weight:700;color:var(--blue)">REQ-2026-0031</td>
+              <td>City Health Clinic</td>
+              <td>Oshawa Diagnostic Lab</td>
+              <td><span class="badge b-gray">eFax</span></td>
+              <td><span class="badge b-red"><span class="bdot" style="background:var(--red)"></span>Failed — line busy</span></td>
+              <td class="td-muted">Apr 12 · 10:34am</td>
+              <td><button class="btn btn-danger" onclick="alert('Retry sent to (905) 555-0200 via Documo API.\n\nIn production this fires the Cloud Function directly.')">Retry now</button></td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;color:var(--blue)">REQ-2026-0038</td>
+              <td>City Health Clinic</td>
+              <td>Oshawa Diagnostic Lab</td>
+              <td><span class="badge b-blue">eFax</span></td>
+              <td><span class="badge b-green"><span class="bdot" style="background:var(--green)"></span>Delivered</span></td>
+              <td class="td-muted">Apr 12 · 11:02am</td>
+              <td><button class="btn btn-ghost">View PDF</button></td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;color:var(--blue)">REQ-2026-0037</td>
+              <td>Durham Women's Health</td>
+              <td>Durham Imaging Centre</td>
+              <td><span class="badge b-purple">Email</span></td>
+              <td><span class="badge b-green"><span class="bdot" style="background:var(--green)"></span>Delivered</span></td>
+              <td class="td-muted">Apr 12 · 10:51am</td>
+              <td><button class="btn btn-ghost">View PDF</button></td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;color:var(--blue)">REQ-2026-0036</td>
+              <td>Oshawa Walk-In Centre</td>
+              <td>LifeLabs Oshawa</td>
+              <td><span class="badge b-blue">eFax</span></td>
+              <td><span class="badge b-green"><span class="bdot" style="background:var(--green)"></span>Delivered</span></td>
+              <td class="td-muted">Apr 12 · 10:18am</td>
+              <td><button class="btn btn-ghost">View PDF</button></td>
+            </tr>
+            <tr>
+              <td style="font-weight:700;color:var(--blue)">REQ-2026-0035</td>
+              <td>Westside Family Practice</td>
+              <td>LifeLabs Whitby</td>
+              <td><span class="badge b-purple">Email</span></td>
+              <td><span class="badge b-green"><span class="bdot" style="background:var(--green)"></span>Delivered</span></td>
+              <td class="td-muted">Apr 11 · 4:44pm</td>
+              <td><button class="btn btn-ghost">View PDF</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PANEL: LAB DIRECTORY
+    ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-labs">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px"><button class="btn btn-primary">+ Add Lab</button></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Lab directory</div><div class="card-sub" style="margin-top:2px">All labs Requify delivers to across all clinics</div></div>
+        <table>
+          <thead><tr><th>Lab name</th><th>Location</th><th>Fax</th><th>Email</th><th>Method</th><th>Clinics using</th><th>Deliveries</th><th>Success rate</th></tr></thead>
+          <tbody>
+            <tr><td class="td-bold">Oshawa Diagnostic Lab</td><td class="td-muted">Oshawa, ON</td><td class="td-muted">(905) 555-0200</td><td class="td-muted">intake@oshawadiag.ca</td><td><span class="badge b-blue">eFax</span></td><td>3</td><td>112</td><td style="color:var(--green);font-weight:600">98.2%</td></tr>
+            <tr><td class="td-bold">Durham Imaging Centre</td><td class="td-muted">Ajax, ON</td><td class="td-muted">(905) 555-0300</td><td class="td-muted">orders@durhamimaging.ca</td><td><span class="badge b-purple">Email</span></td><td>2</td><td>54</td><td style="color:var(--green);font-weight:600">100%</td></tr>
+            <tr><td class="td-bold">LifeLabs Oshawa</td><td class="td-muted">Oshawa, ON</td><td class="td-muted">(905) 555-0400</td><td class="td-muted">oshawa@lifelabs.com</td><td><span class="badge b-blue">eFax</span></td><td>2</td><td>43</td><td style="color:var(--green);font-weight:600">100%</td></tr>
+            <tr><td class="td-bold">LifeLabs Whitby</td><td class="td-muted">Whitby, ON</td><td class="td-muted">(905) 555-0500</td><td class="td-muted">whitby@lifelabs.com</td><td><span class="badge b-purple">Email</span></td><td>1</td><td>18</td><td style="color:var(--green);font-weight:600">100%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PANEL: SUPPORT TICKETS
+    ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-support">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="section-tabs">
+          <button class="stab active">Open (3)</button>
+          <button class="stab">In progress (1)</button>
+          <button class="stab">Resolved</button>
+        </div>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Priority</th><th>Clinic</th><th>Issue</th><th>Opened</th><th>Assigned</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr style="background:var(--red-pale)">
+              <td><span class="badge b-red">Urgent</span></td>
+              <td class="td-bold">City Health Clinic</td>
+              <td><div class="td-bold">Requisition PDF not generating</div><div class="td-muted" style="font-size:11px">Dr. Chen says submit button spins but no PDF — started today</div></td>
+              <td class="td-muted">2h ago</td>
+              <td class="td-muted">Unassigned</td>
+              <td><button class="btn btn-primary" onclick="openTicketModal()">Respond</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge b-amber">Medium</span></td>
+              <td class="td-bold">Westside Family Practice</td>
+              <td><div class="td-bold">Can't log in — forgot password</div><div class="td-muted" style="font-size:11px">Office manager locked out. Password reset email not arriving.</div></td>
+              <td class="td-muted">5h ago</td>
+              <td class="td-muted">Unassigned</td>
+              <td><button class="btn btn-ghost" onclick="alert('Password reset email resent to josei@westsidefp.ca')">Reset password</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge b-gray">Low</span></td>
+              <td class="td-bold">Durham Women's Health</td>
+              <td><div class="td-bold">Request: add second provider to account</div><div class="td-muted" style="font-size:11px">Dr. Amara wants to add Dr. Singh as a provider user.</div></td>
+              <td class="td-muted">1d ago</td>
+              <td class="td-muted">Unassigned</td>
+              <td><button class="btn btn-ghost" onclick="showPanel('clinics',null)">Open clinic</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PANEL: AUDIT LOG
+    ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-audit">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Audit log</div><div><button class="btn btn-ghost">Export CSV</button></div></div>
+        <table>
+          <thead><tr><th>Timestamp</th><th>Event</th><th>Actor</th><th>Clinic</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td class="td-muted" style="white-space:nowrap">Apr 12 · 11:02am</td><td><span class="badge b-green">REQ_DELIVERED</span></td><td>System</td><td>City Health</td><td class="td-muted">REQ-2026-0038 → Oshawa Diagnostic via eFax</td></tr>
+            <tr><td class="td-muted" style="white-space:nowrap">Apr 12 · 10:58am</td><td><span class="badge b-blue">CLINIC_ONBOARDED</span></td><td>Requify Admin</td><td>Durham Women's Health</td><td class="td-muted">Welcome email sent · 2 labs configured</td></tr>
+            <tr><td class="td-muted" style="white-space:nowrap">Apr 12 · 10:34am</td><td><span class="badge b-red">REQ_FAILED</span></td><td>System</td><td>City Health</td><td class="td-muted">REQ-2026-0031 eFax failed — (905) 555-0200 busy</td></tr>
+            <tr><td class="td-muted" style="white-space:nowrap">Apr 12 · 10:18am</td><td><span class="badge b-green">REQ_DELIVERED</span></td><td>System</td><td>Oshawa Walk-In</td><td class="td-muted">REQ-2026-0036 → LifeLabs Oshawa via eFax</td></tr>
+            <tr><td class="td-muted" style="white-space:nowrap">Apr 11 · 4:44pm</td><td><span class="badge b-green">REQ_DELIVERED</span></td><td>System</td><td>Westside Family</td><td class="td-muted">REQ-2026-0035 → LifeLabs Whitby via Email</td></tr>
+            <tr><td class="td-muted" style="white-space:nowrap">Apr 11 · 2:10pm</td><td><span class="badge b-blue">USER_LOGIN</span></td><td>Dr. Alex Chen</td><td>City Health</td><td class="td-muted">Logged in from 142.115.xx.xx (Oshawa, ON)</td></tr>
+            <tr><td class="td-muted" style="white-space:nowrap">Apr 11 · 1:33pm</td><td><span class="badge b-purple">PLAN_CHANGED</span></td><td>Requify Admin</td><td>City Health</td><td class="td-muted">Upgraded: Starter → Professional</td></tr>
+            <tr><td class="td-muted" style="white-space:nowrap">Apr 10 · 9:15am</td><td><span class="badge b-amber">TICKET_OPENED</span></td><td>Dr. James Osei</td><td>Westside Family</td><td class="td-muted">Support ticket: password reset request</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PANEL: REVENUE
+    ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-revenue">
+      <div class="kpi-row">
+        <div class="kpi k-green"><div class="kpi-label">MRR</div><div class="kpi-value" style="color:var(--green)">$497</div><div class="kpi-sub up">↑ $398 from 60 days ago</div></div>
+        <div class="kpi k-blue"><div class="kpi-label">ARR (projected)</div><div class="kpi-value" style="color:var(--blue)">$5.96k</div><div class="kpi-sub neutral">At current MRR</div></div>
+        <div class="kpi k-amber"><div class="kpi-label">Trials converting</div><div class="kpi-value" style="color:var(--amber)">1</div><div class="kpi-sub neutral">Expires in 3 days</div></div>
+        <div class="kpi k-green"><div class="kpi-label">Churn</div><div class="kpi-value" style="color:var(--green)">0%</div><div class="kpi-sub up">No churned clinics</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">MRR growth</div></div>
+          <div class="card-body"><div class="chart-h220"><canvas id="chart-mrr"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Revenue by clinic</div></div>
+          <div class="card-body">
+            <div class="clinic-row"><div class="clinic-avatar">CH</div><div class="clinic-info"><div class="clinic-name">City Health Clinic</div><div class="clinic-meta">Professional · since Mar 1</div></div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--green)">$299</div></div>
+            <div class="clinic-row"><div class="clinic-avatar" style="background:var(--green)">DW</div><div class="clinic-info"><div class="clinic-name">Durham Women's Health</div><div class="clinic-meta">Starter · since Mar 18</div></div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--green)">$99</div></div>
+            <div class="clinic-row"><div class="clinic-avatar" style="background:var(--purple)">OW</div><div class="clinic-info"><div class="clinic-name">Oshawa Walk-In Centre</div><div class="clinic-meta">Starter · since Apr 5</div></div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--green)">$99</div></div>
+            <div class="clinic-row"><div class="clinic-avatar" style="background:var(--amber)">WF</div><div class="clinic-info"><div class="clinic-name">Westside Family Practice</div><div class="clinic-meta">Trial · expires Apr 18</div></div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--amber)">—</div></div>
+            <div style="border-top:2px solid var(--border);padding-top:12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:13px;color:var(--muted)">Total MRR</span>
+              <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:var(--green)">$497</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PANEL: SYSTEM HEALTH
+    ══════════════════════════════════════════ -->
+    <div class="panel" id="panel-system">
+      <div class="alert-bar alert-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <div><strong>All systems operational.</strong> Last checked 2 minutes ago.</div>
+      </div>
+      <div class="grid-3">
+        <div class="card"><div class="card-body" style="text-align:center;padding:24px">
+          <div style="width:48px;height:48px;background:var(--green-pale);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Firebase</div>
+          <span class="badge b-green">Operational</span>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px">Firestore · Auth · Functions</div>
+        </div></div>
+        <div class="card"><div class="card-body" style="text-align:center;padding:24px">
+          <div style="width:48px;height:48px;background:var(--green-pale);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.08 1.18 2 2 0 012.06 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.07 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92v2z"/></svg>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Documo eFax</div>
+          <span class="badge b-green">Operational</span>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px">98.5% delivery rate · 7d</div>
+        </div></div>
+        <div class="card"><div class="card-body" style="text-align:center;padding:24px">
+          <div style="width:48px;height:48px;background:var(--green-pale);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:4px">Twilio SMS</div>
+          <span class="badge b-green">Operational</span>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px">187 messages sent · 30d</div>
+        </div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Infrastructure costs (April)</div><div class="card-sub" style="margin-top:1px">Actual spend vs MRR</div></div>
+        <div class="card-body">
+          <table style="margin-bottom:0">
+            <thead><tr><th>Service</th><th>Usage</th><th>Cost</th></tr></thead>
+            <tbody>
+              <tr><td class="td-bold">Firebase (Blaze plan)</td><td class="td-muted">187 functions · 24GB storage</td><td class="td-bold">$4.20</td></tr>
+              <tr><td class="td-bold">Documo eFax</td><td class="td-muted">141 faxes sent</td><td class="td-bold">$3.10</td></tr>
+              <tr><td class="td-bold">Twilio SMS</td><td class="td-muted">374 texts (2 per req)</td><td class="td-bold">$3.74</td></tr>
+              <tr><td class="td-bold">Vercel hosting</td><td class="td-muted">Pro plan</td><td class="td-bold">$20.00</td></tr>
+              <tr style="border-top:2px solid var(--border)">
+                <td style="font-family:'Syne',sans-serif;font-weight:800">Total infra cost</td>
+                <td></td>
+                <td style="font-family:'Syne',sans-serif;font-weight:800;color:var(--green)">$31.04</td>
+              </tr>
+              <tr>
+                <td style="font-family:'Syne',sans-serif;font-weight:800">MRR</td>
+                <td></td>
+                <td style="font-family:'Syne',sans-serif;font-weight:800;color:var(--blue)">$497</td>
+              </tr>
+              <tr>
+                <td style="font-family:'Syne',sans-serif;font-weight:800;color:var(--green)">Gross margin</td>
+                <td class="td-muted">Infrastructure only</td>
+                <td style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--green)">93.8%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- CLINIC DETAIL MODAL -->
+<div class="modal-overlay" id="clinic-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">City Health Clinic — Manage</span>
+      <button class="modal-close" onclick="closeModal('clinic-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <span class="badge b-blue">Professional · $299/mo</span>
+        <span class="badge b-green"><span class="bdot" style="background:var(--green)"></span>Active since Mar 1</span>
+        <span class="badge b-gray">87 reqs sent</span>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group"><label class="form-label">Plan</label>
+          <select class="form-select"><option>Starter — $99/mo</option><option selected>Professional — $299/mo</option><option>Enterprise — custom</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Billing status</label>
+          <select class="form-select"><option>Active</option><option>Suspended</option><option>Trial</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Internal notes</label>
+        <textarea class="form-input" style="min-height:70px">First pilot clinic. Met Dr. Chen at Durham walk-in. High usage — potential upsell to Enterprise when they add 3rd provider.</textarea>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:12px">Danger zone</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-danger" onclick="alert('Account suspended. Clinic will see a suspension notice on login.')">Suspend account</button>
+        <button class="btn btn-ghost" onclick="alert('Password reset email sent to alex@cityhealthclinic.ca')">Reset password</button>
+        <button class="btn btn-primary" onclick="alert('Impersonation session started. You can now see the dashboard as this clinic.')">Impersonate</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('clinic-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('clinic-modal');alert('Changes saved.')">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- TICKET MODAL -->
+<div class="modal-overlay" id="ticket-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Ticket: PDF not generating — City Health</span>
+      <button class="modal-close" onclick="closeModal('ticket-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="alert-bar alert-red" style="margin-bottom:14px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <strong>Urgent — opened 2h ago · unassigned</strong>
+      </div>
+      <div style="background:var(--light);border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.6;color:var(--text)">
+        <strong>Dr. Chen says:</strong> "When I click Send Requisition the button spins for about 30 seconds then nothing happens. No PDF downloads. Started happening about 2 hours ago. We have 3 urgent patients waiting."
+      </div>
+      <div class="form-group"><label class="form-label">Diagnosis</label>
+        <select class="form-select"><option>Likely jsPDF CDN timeout — Cloudflare CDN issue</option><option>Firebase function cold start</option><option>User error</option><option>Unknown — needs investigation</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Response to clinic</label>
+        <textarea class="form-input" style="min-height:100px">Hi Dr. Chen, we've identified the issue — our PDF library CDN is experiencing a brief outage. We've switched to a backup CDN and the fix is live now. Please refresh your browser and try again. Apologies for the disruption — your three patients should be able to submit now.</textarea>
+      </div>
+      <div class="form-group"><label class="form-label">Internal note (not sent to clinic)</label>
+        <textarea class="form-input" style="min-height:60px">jsPDF CDN down for ~90min. Switched to jsdelivr backup. Monitor for recurrence. Long-term: self-host jsPDF.</textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('ticket-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('ticket-modal');alert('Response sent to Dr. Chen. Ticket marked resolved.')">Send & resolve</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PANEL_TITLES = {
+  overview:'Operations Dashboard',alerts:'Alerts',clinics:'All Clinics',
+  onboard:'Onboard New Clinic',delivery:'Delivery Log',labs:'Lab Directory',
+  support:'Support Tickets',audit:'Audit Log',revenue:'Revenue',system:'System Health'
+};
+
+function showPanel(id, navEl) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const p = document.getElementById('panel-' + id);
+  if (p) p.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('topbar-title').textContent = PANEL_TITLES[id] || id;
+}
+
+function openClinicModal() { document.getElementById('clinic-modal').classList.add('show'); }
+function openTicketModal() { document.getElementById('ticket-modal').classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+});
+
+function addLabEntry() {
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.style.marginBottom = '10px';
+  div.innerHTML = `<div class="card-body" style="padding:14px">
+    <div class="form-group"><label class="form-label">Lab name</label><input class="form-input" placeholder="e.g. LifeLabs Whitby"></div>
+    <div class="form-row-2">
+      <div class="form-group"><label class="form-label">Fax number</label><input class="form-input" placeholder="(905) 555-0000"></div>
+      <div class="form-group"><label class="form-label">Intake email</label><input class="form-input" placeholder="intake@lab.ca"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Delivery method</label>
+      <select class="form-select"><option>eFax (recommended)</option><option>Email</option><option>Both</option></select>
+    </div>
+  </div>`;
+  document.getElementById('lab-entries').appendChild(div);
+}
+
+function submitOnboard() {
+  alert('✅ Clinic created!\n\nWelcome email sent.\nLab delivery configured.\nAccount ready to use.\n\nIn production: Firebase Auth user created, Firestore clinic doc written, welcome email triggered via SendGrid.');
+}
+
+// Charts
+new Chart(document.getElementById('chart-volume'), {
+  type:'line',
+  data:{
+    labels:['Apr 6','Apr 7','Apr 8','Apr 9','Apr 10','Apr 11','Apr 12'],
+    datasets:[
+      {label:'City Health',data:[12,8,14,11,9,13,20],borderColor:'#0E7CF0',backgroundColor:'rgba(14,124,240,0.06)',borderWidth:2,tension:0.4,fill:true,pointRadius:3},
+      {label:'Durham Women\'s',data:[4,6,5,7,8,6,9],borderColor:'#0A9E6E',backgroundColor:'rgba(10,158,110,0.05)',borderWidth:2,tension:0.4,fill:true,pointRadius:3},
+      {label:'Others',data:[2,3,4,3,5,6,8],borderColor:'#7C3AED',backgroundColor:'rgba(124,58,237,0.05)',borderWidth:2,tension:0.4,fill:true,pointRadius:3},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{family:'DM Sans',size:12},boxWidth:10}}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:11},color:'#5A738A'}},y:{grid:{color:'rgba(226,237,248,0.8)'},ticks:{font:{family:'DM Sans',size:11},color:'#5A738A'},beginAtZero:true}}}
+});
+
+new Chart(document.getElementById('chart-mrr'), {
+  type:'bar',
+  data:{
+    labels:['Feb','Mar','Apr'],
+    datasets:[{label:'MRR',data:[0,398,497],backgroundColor:['rgba(10,158,110,0.15)','rgba(10,158,110,0.5)','#0A9E6E'],borderColor:['#0A9E6E','#0A9E6E','#0A9E6E'],borderWidth:1.5,borderRadius:6}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{family:'DM Sans',size:12},color:'#5A738A'}},y:{grid:{color:'rgba(226,237,248,0.8)'},ticks:{font:{family:'DM Sans',size:12},color:'#5A738A'},beginAtZero:true,callback:v=>'$'+v}}}
+});
+</script>
+</body>
+</html>

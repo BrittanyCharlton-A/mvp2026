@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Imaging Requisition — Requify Health</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{--blue:#0E7CF0;--blue-dark:#0A5EC2;--blue-pale:#E8F2FF;--dark:#050D1A;--sidebar-bg:#070F1E;--text:#0D1B2A;--muted:#5A738A;--border:#E2EDF8;--white:#FFFFFF;--green:#0A9E6E;--light:#F4F8FF;--red:#DC2626;--radius:10px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:var(--light);display:flex;min-height:100vh;}
+  h1,h2,h3,h4{font-family:'Syne',sans-serif;}
+  .sidebar{width:240px;min-height:100vh;background:var(--sidebar-bg);border-right:1px solid rgba(14,124,240,0.12);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:50;}
+  .sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.06);text-decoration:none;}
+  .sidebar-logo-icon{width:32px;height:32px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+  .sidebar-logo-icon svg{width:18px;height:18px;}
+  .sidebar-logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#fff;}
+  .sidebar-logo-text span{color:var(--blue);}
+  .sidebar-clinic{margin:14px 12px;background:rgba(14,124,240,0.1);border:1px solid rgba(14,124,240,0.2);border-radius:8px;padding:10px 12px;}
+  .sidebar-clinic-name{font-size:13px;font-weight:600;color:#fff;}
+  .sidebar-clinic-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+  .sidebar-nav{flex:1;padding:8px 12px;}
+  .nav-section-label{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:14px 8px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:7px;cursor:pointer;transition:all 0.15s;text-decoration:none;margin-bottom:2px;}
+  .nav-item:hover{background:rgba(255,255,255,0.06);}
+  .nav-item.active{background:rgba(14,124,240,0.15);}
+  .nav-item svg{width:16px;height:16px;color:rgba(255,255,255,0.4);flex-shrink:0;}
+  .nav-item.active svg{color:var(--blue);}
+  .nav-item span{font-size:14px;color:rgba(255,255,255,0.55);font-weight:500;}
+  .nav-item.active span{color:#fff;}
+  .nav-badge{margin-left:auto;background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;}
+  .sidebar-bottom{padding:12px;border-top:1px solid rgba(255,255,255,0.06);}
+  .sidebar-user{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;}
+  .user-avatar{width:32px;height:32px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'Syne',sans-serif;}
+  .user-name{font-size:13px;font-weight:600;color:#fff;}
+  .user-role{font-size:11px;color:rgba(255,255,255,0.35);}
+
+  .main{margin-left:240px;flex:1;}
+  .topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40;}
+  .topbar-left{display:flex;align-items:center;gap:12px;}
+  .back-btn{display:flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:14px;transition:color 0.2s;}
+  .back-btn:hover{color:var(--text);}
+  .back-btn svg{width:16px;height:16px;}
+  .topbar-title{font-size:16px;font-weight:700;color:var(--text);}
+  .content{padding:24px;max-width:960px;}
+
+  .form-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;overflow:hidden;}
+  .form-card-header{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .fch-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .fch-icon svg{width:14px;height:14px;}
+  .fch-title{font-size:13px;font-weight:700;color:var(--text);}
+  .fch-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+  .form-body{padding:18px;}
+
+  .fg{display:flex;flex-direction:column;gap:5px;}
+  label.fl{font-size:11px;font-weight:600;color:var(--text);}
+  label.fl .req{color:var(--red);margin-left:2px;}
+  input[type="text"],input[type="date"],input[type="tel"],input[type="email"],select,textarea{padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:all 0.2s;background:var(--white);width:100%;}
+  input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(14,124,240,0.08);}
+  input.err{border-color:var(--red);}
+  .gr2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .gr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  .gr4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;}
+
+  /* SECTION HEADERS */
+  .sec-header{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--white);background:var(--text);padding:5px 10px;margin:-18px -18px 14px;border-radius:0;}
+  .sec-header.blue{background:var(--blue);}
+  .sec-header.dark{background:#1a2a3a;}
+
+  /* CHECKBOXES */
+  .cb{display:flex;align-items:flex-start;gap:6px;padding:2px 0;cursor:pointer;}
+  .cb input[type="checkbox"]{width:13px;height:13px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;margin-top:2px;}
+  .cb-label{font-size:12px;color:var(--text);cursor:pointer;line-height:1.3;}
+  .cb-sub{font-size:10px;color:var(--muted);}
+  .cb-indent{padding-left:20px;}
+
+  /* RADIO */
+  .rb{display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer;}
+  .rb input[type="radio"]{width:13px;height:13px;accent-color:var(--blue);cursor:pointer;flex-shrink:0;}
+  .rb label{font-size:12px;color:var(--text);cursor:pointer;}
+
+  /* R/L BOXES */
+  .rl{display:flex;align-items:center;gap:4px;}
+  .rl-label{font-size:11px;color:var(--muted);font-weight:600;}
+  .rl input[type="checkbox"]{width:13px;height:13px;accent-color:var(--blue);cursor:pointer;}
+
+  /* SUBSECTION TITLE */
+  .sub-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--blue);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+
+  /* APPT BADGE */
+  .appt-badge{display:inline-flex;align-items:center;gap:5px;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-bottom:8px;}
+
+  /* GRID LAYOUT FOR EXAM SECTIONS */
+  .exam-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .exam-col{padding:14px;}
+  .exam-col:first-child{border-right:1px solid var(--border);}
+  .exam-col-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .exam-col-3 .exam-col{border-right:1px solid var(--border);}
+  .exam-col-3 .exam-col:last-child{border-right:none;}
+
+  /* INLINE INPUT */
+  .inline-input{display:flex;align-items:center;gap:6px;margin-top:4px;}
+  .inline-input label{font-size:11px;color:var(--muted);white-space:nowrap;}
+  .inline-input input{flex:1;padding:4px 8px;font-size:12px;}
+
+  /* SIGNATURE */
+  .sig-wrap{border:1.5px dashed var(--border);border-radius:8px;overflow:hidden;}
+  .sig-wrap.has-sig{border-color:var(--green);border-style:solid;}
+  canvas#sig{display:block;width:100%;height:100px;cursor:crosshair;touch-action:none;}
+  .sig-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:var(--light);border-top:1px solid var(--border);}
+  .sig-hint{font-size:11px;color:var(--muted);}
+  .btn-clr{background:none;border:1px solid var(--border);border-radius:5px;padding:3px 10px;font-size:11px;color:var(--muted);cursor:pointer;}
+  .btn-clr:hover{border-color:var(--red);color:var(--red);}
+
+  /* SUBMIT BAR */
+  .submit-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--light);border-top:1px solid var(--border);}
+  .submit-note{font-size:11px;color:var(--muted);}
+  .submit-actions{display:flex;gap:10px;}
+  .btn-draft{padding:8px 16px;border:1.5px solid var(--border);border-radius:8px;background:var(--white);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:'Syne',sans-serif;}
+  .btn-draft:hover{border-color:var(--blue);color:var(--blue);}
+  .btn-send{padding:8px 20px;background:var(--blue);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;display:flex;align-items:center;gap:7px;}
+  .btn-send:hover{background:var(--blue-dark);}
+  .btn-send svg{width:13px;height:13px;}
+
+  /* SUCCESS */
+  .success-overlay{display:none;position:fixed;inset:0;background:rgba(5,13,26,0.75);z-index:200;align-items:center;justify-content:center;}
+  .success-overlay.show{display:flex;}
+  .success-card{background:var(--white);border-radius:16px;padding:44px 36px;text-align:center;max-width:420px;animation:pop 0.35s ease;}
+  @keyframes pop{from{transform:scale(0.85);opacity:0}to{transform:scale(1);opacity:1}}
+  .success-icon{width:64px;height:64px;background:#E6F9F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+  .success-icon svg{width:30px;height:30px;color:var(--green);}
+  .success-card h2{font-size:22px;font-weight:800;color:var(--text);margin-bottom:8px;}
+  .success-card p{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:22px;}
+  .success-ref{display:inline-block;background:var(--blue-pale);color:var(--blue);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;padding:5px 14px;border-radius:7px;margin-bottom:22px;}
+  .success-acts{display:flex;gap:10px;justify-content:center;}
+  .btn-dash{padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-again{padding:10px 18px;border:1.5px solid var(--border);background:var(--white);color:var(--text);border-radius:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+  /* NOTE BOX */
+  .note-box{background:var(--blue-pale);border:1px solid rgba(14,124,240,0.2);border-radius:7px;padding:10px 12px;font-size:11px;color:var(--blue);margin-bottom:14px;line-height:1.5;}
+  .warn-box{background:#FEF2F2;border:1px solid rgba(220,38,38,0.2);border-radius:7px;padding:10px 12px;font-size:11px;color:var(--red);margin-bottom:14px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">
+    <div class="sidebar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/></svg></div>
+    <span class="sidebar-logo-text">Requify <span>Health</span></span>
+  </a>
+  <div class="sidebar-clinic"><div class="sidebar-clinic-name">City Health Clinic</div><div class="sidebar-clinic-sub">Oshawa, Ontario</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item" href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><span>Dashboard</span></a>
+    <a class="nav-item active" href="submit.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New Requisition</span></a>
+    <a class="nav-item" href="requisitions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg><span>Requisitions</span><span class="nav-badge">8</span></a>
+    <a class="nav-item" href="referrals.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87m-4-12a4 4 0 010 7.75"/></svg><span>Referrals</span><span class="nav-badge" style="background:#7C3AED">6</span></a>
+    <div class="nav-section-label">Clinic</div>
+    <a class="nav-item" href="analytics.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Analytics</span></a>
+    <a class="nav-item" href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg><span>Settings</span></a>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="sidebar-user"><div class="user-avatar">DC</div><div style="flex:1"><div class="user-name">Dr. Chen</div><div class="user-role">Attending Physician</div></div></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="dashboard.html" class="back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>Back</a>
+      <span style="color:var(--border)">|</span>
+      <span class="topbar-title">General Requisition — Diagnostic Imaging</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:11px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:600">Clear Medical Imaging · Version 9</span>
+      <span style="background:var(--blue-pale);color:var(--blue);font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;font-family:'Syne',sans-serif">Digital</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="note-box">
+      <strong>Appointment booking:</strong> Call 519-256-4914 or fax 519-256-3221 · Please provide 24 hours advance notice if unable to keep appointment · Arrive 10 minutes early with your health card and this form.
+    </div>
+
+    <!-- PATIENT + PROVIDER -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="fch-icon" style="background:#EBF4FF"><svg viewBox="0 0 24 24" fill="none" stroke="#0E7CF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div><div class="fch-title">Patient Information</div><div class="fch-sub">Search existing patients or enter new</div></div>
+        <!-- LIVE CLOCK -->
+        <div style="margin-left:auto;text-align:right">
+          <div id="live-time" style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--blue);letter-spacing:0.02em">--:--:--</div>
+          <div id="live-date" style="font-size:11px;color:var(--muted);margin-top:1px"></div>
+        </div>
+      </div>
+      <div class="form-body">
+
+        <!-- PATIENT SEARCH -->
+        <div style="margin-bottom:16px">
+          <label class="fl" style="margin-bottom:6px;display:block">Search existing patients</label>
+          <div style="position:relative">
+            <div style="display:flex;align-items:center;gap:8px;background:var(--light);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;transition:all 0.2s" id="search-wrap">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="pt-search" placeholder="Search by name, OHIP, or date of birth..." autocomplete="off"
+                style="border:none;background:none;outline:none;font-size:13px;color:var(--text);width:100%;font-family:'DM Sans',sans-serif"
+                oninput="searchPatients(this.value)" onfocus="showDropdown()">
+              <span id="pt-search-clear" onclick="clearPatientSearch()" style="display:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1">×</span>
+            </div>
+            <!-- DROPDOWN -->
+            <div id="pt-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--white);border:1.5px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(14,124,240,0.12);z-index:100;max-height:260px;overflow-y:auto">
+              <div id="pt-dropdown-inner"></div>
+            </div>
+          </div>
+          <div id="pt-selected-badge" style="display:none;margin-top:8px;display:none;align-items:center;gap:8px;background:#E6F9F2;border:1px solid rgba(10,158,110,0.2);border-radius:7px;padding:8px 12px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span id="pt-selected-name" style="font-size:13px;font-weight:600;color:var(--green)"></span>
+            <span style="font-size:11px;color:var(--muted);margin-left:4px" id="pt-selected-meta"></span>
+            <button onclick="clearPatientSearch()" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted)">Change patient</button>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border);margin-bottom:14px;padding-top:14px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-weight:600">Patient details — auto-filled from search or enter manually</div>
+        </div>
+
+        <div class="gr2" style="margin-bottom:12px">
+          <div class="fg"><label class="fl">Last name <span class="req">*</span></label><input type="text" id="pt-last" placeholder="Last name"></div>
+          <div class="fg"><label class="fl">First name <span class="req">*</span></label><input type="text" id="pt-first" placeholder="First name"></div>
+        </div>
+        <div class="gr3" style="margin-bottom:12px">
+          <div class="fg"><label class="fl">Phone (cell) <span class="req">*</span></label><input type="tel" id="pt-cell" placeholder="(000) 000-0000"></div>
+          <div class="fg"><label class="fl">Phone (home)</label><input type="tel" id="pt-home" placeholder="(647) 568-9041"></div>
+          <div class="fg"><label class="fl">Date of birth <span class="req">*</span></label><input type="date" id="pt-dob"></div>
+        </div>
+        <div class="gr3" style="margin-bottom:12px">
+          <div class="fg" style="grid-column:1/3"><label class="fl">Address</label><input type="text" id="pt-addr" placeholder="108-755 Grand Maris Rd E"></div>
+          <div class="fg"><label class="fl">Email (for notifications)</label><input type="email" id="pt-email" placeholder="patient@email.com"></div>
+        </div>
+        <div class="gr4">
+          <div class="fg"><label class="fl">Health card no. <span class="req">*</span></label>
+            <div style="position:relative">
+              <input type="text" id="pt-hcard" placeholder="1234-567-890" maxlength="14" oninput="maskOHIP(this)" style="font-family:'Syne',sans-serif;font-weight:600;letter-spacing:0.05em">
+              <span id="ohip-status" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;display:none"></span>
+            </div>
+            <div id="ohip-hint" style="font-size:10px;color:var(--muted);margin-top:3px">Format: 1234-567-890 (10 digits)</div>
+          </div>
+          <div class="fg"><label class="fl">Version code</label><input type="text" id="pt-ver" placeholder="GY" maxlength="2"></div>
+          <div class="fg"><label class="fl">Appointment date</label><input type="date" id="appt-date"></div>
+          <div class="fg"><label class="fl">Appointment time</label><input type="text" id="appt-time" placeholder="--:--" readonly style="background:var(--blue-pale);color:var(--blue);font-weight:700;font-family:'Syne',sans-serif;cursor:pointer" onclick="setApptTimeNow()" title="Click to set to current time"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Appointment time auto-updates live · Click the field to lock in the current time
+        </div>
+      </div>
+    </div>
+
+    <!-- PROVIDER -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="fch-icon" style="background:#E6F9F2"><svg viewBox="0 0 24 24" fill="none" stroke="#0A9E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div><div class="fch-title">Provider Information</div><div class="fch-sub">Pre-filled from clinic profile</div></div>
+      </div>
+      <div class="form-body">
+        <div class="gr3" style="margin-bottom:12px">
+          <div class="fg"><label class="fl">Provider name (print) <span class="req">*</span></label><input type="text" id="prov-name" placeholder="Dr. First Last"></div>
+          <div class="fg"><label class="fl">Billing no.</label><input type="text" id="prov-billing" placeholder="Billing number"></div>
+          <div class="fg"><label class="fl">CC (copy to)</label><input type="text" id="prov-cc" placeholder="Other clinician"></div>
+        </div>
+        <div class="gr2">
+          <div class="fg"><label class="fl">Clinical history / reason <span class="req">*</span></label><input type="text" id="clinical-hx" placeholder="e.g. submental cyst, rule out mass"></div>
+          <div class="fg"><label class="fl">STAT?</label>
+            <select id="stat-sel"><option value="">Routine</option><option value="STAT">STAT</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         SEND TO + PATIENT NOTIFICATION
+    ═══════════════════════════════════════ -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="fch-icon" style="background:#E6F9F2"><svg viewBox="0 0 24 24" fill="none" stroke="#0A9E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+        <div><div class="fch-title">Send To &amp; Patient Notification</div><div class="fch-sub">Choose destination lab and how the patient is notified</div></div>
+      </div>
+      <div class="form-body">
+        <div class="gr2" style="margin-bottom:14px">
+          <div class="fg">
+            <label class="fl">Send requisition to <span class="req">*</span></label>
+            <select id="lab-select" onchange="updateLabDetails(this.value)" style="font-size:14px;padding:9px 11px">
+              <option value="">— Select destination lab —</option>
+              <optgroup label="Oshawa / Durham">
+                <option value="clear">Clear Medical Imaging — 519-256-3221</option>
+                <option value="oshawa-diag">Oshawa Diagnostic Lab — (905) 555-0200</option>
+                <option value="durham-imaging">Durham Imaging Centre — (905) 555-0300</option>
+                <option value="lifelabs-oshawa">LifeLabs Oshawa — (905) 555-0400</option>
+                <option value="lifelabs-whitby">LifeLabs Whitby — (905) 555-0500</option>
+              </optgroup>
+              <optgroup label="Toronto">
+                <option value="dynacare">Dynacare Laboratories</option>
+                <option value="alpha-imaging">Alpha Imaging</option>
+              </optgroup>
+              <option value="custom">+ Enter custom lab / fax number</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label class="fl">Delivery method</label>
+            <select id="delivery-method">
+              <option value="efax">eFax (recommended — no lab setup needed)</option>
+              <option value="email">Email</option>
+              <option value="both">Both eFax + Email</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Lab details display -->
+        <div id="lab-details" style="display:none;background:var(--blue-pale);border:1px solid rgba(14,124,240,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.08 1.18 2 2 0 012.06 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.07 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92v2z"/></svg>
+            <div>
+              <div id="lab-detail-name" style="font-size:13px;font-weight:700;color:var(--blue)"></div>
+              <div id="lab-detail-info" style="font-size:11px;color:var(--muted);margin-top:2px"></div>
+            </div>
+            <div style="margin-left:auto">
+              <span style="background:var(--green);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;font-family:'Syne',sans-serif">Ready to send</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom lab entry -->
+        <div id="custom-lab-fields" style="display:none;margin-bottom:14px">
+          <div class="gr3">
+            <div class="fg"><label class="fl">Lab name</label><input type="text" id="custom-lab-name" placeholder="e.g. Lakeview Diagnostics"></div>
+            <div class="fg"><label class="fl">Fax number</label><input type="text" id="custom-lab-fax" placeholder="(519) 555-0000"></div>
+            <div class="fg"><label class="fl">Email (optional)</label><input type="email" id="custom-lab-email" placeholder="intake@lab.ca"></div>
+          </div>
+        </div>
+
+        <!-- Patient notification -->
+        <div style="border-top:1px solid var(--border);padding-top:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Patient notification
+          </div>
+          <div class="gr3">
+            <div class="fg">
+              <label class="fl">Notify patient via</label>
+              <select id="notify-method">
+                <option value="sms-email">SMS + Email (recommended)</option>
+                <option value="sms">SMS only</option>
+                <option value="email">Email only</option>
+                <option value="none">Do not notify</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label class="fl">Patient cell (for SMS)</label>
+              <input type="tel" id="notify-cell" placeholder="Auto-filled from patient info">
+            </div>
+            <div class="fg">
+              <label class="fl">Patient email</label>
+              <input type="email" id="notify-email" placeholder="Auto-filled from patient info">
+            </div>
+          </div>
+          <!-- SMS preview -->
+          <div style="margin-top:12px;background:var(--dark);border-radius:10px;padding:14px 16px;max-width:360px">
+            <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:8px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:0.08em">SMS PREVIEW — sent to patient</div>
+            <div style="background:#0A9E6E;border-radius:10px 10px 2px 10px;padding:10px 12px;display:inline-block;max-width:100%">
+              <div id="sms-preview-text" style="font-size:12px;color:#fff;line-height:1.5">Hi [Patient], your requisition from Dr. Alex Chen has been submitted to [Lab]. Ref: [REQ#]. Show this SMS or your health card at your appointment. — Requify Health</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         NO APPOINTMENT REQUIRED
+    ═══════════════════════════════════════ -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="fch-icon" style="background:var(--text)"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <div><div class="fch-title">X-Ray — No Appointment Required</div><div class="fch-sub">Walk-in · Check all required views</div></div>
+      </div>
+      <div class="form-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+
+          <!-- CHEST -->
+          <div style="padding:12px;border-right:1px solid var(--border)">
+            <div class="sub-title">Chest</div>
+            <label class="cb"><input type="checkbox" name="xray" value="Chest PA & LAT"><span class="cb-label">Chest PA &amp; LAT</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Sternum"><span class="cb-label">Sternum</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="SC Joints"><span class="cb-label">SC Joints</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Ribs R"><span class="cb-label">Ribs R</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Ribs L"><span class="cb-label">Ribs L</span></label>
+
+            <div class="sub-title" style="margin-top:12px">Spine &amp; Pelvis</div>
+            <label class="cb"><input type="checkbox" name="xray" value="Cervical Spine"><span class="cb-label">Cervical Spine</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Thoracic Spine"><span class="cb-label">Thoracic Spine</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Lumbar Spine"><span class="cb-label">Lumbar Spine</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Sacrum & Coccyx"><span class="cb-label">Sacrum &amp; Coccyx</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Pelvis"><span class="cb-label">Pelvis</span></label>
+            <div class="rl cb-indent" style="margin-top:3px">
+              <label class="cb"><input type="checkbox" name="xray" value="Pelvis & Hips R"><span class="cb-label">Pelvis &amp; Hips</span></label>
+              <span class="rl-label" style="margin-left:4px">R</span><input type="checkbox" name="xray" value="Pelvis Hips R">
+              <span class="rl-label">L</span><input type="checkbox" name="xray" value="Pelvis Hips L">
+            </div>
+            <label class="cb"><input type="checkbox" name="xray" value="SI Joints"><span class="cb-label">SI Joints</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Scoliosis Series"><span class="cb-label">Scoliosis Series</span></label>
+          </div>
+
+          <!-- ABDOMEN / SKELETAL -->
+          <div style="padding:12px;border-right:1px solid var(--border)">
+            <div class="sub-title">Abdomen</div>
+            <label class="cb"><input type="checkbox" name="xray" value="KUB/Flat Plate"><span class="cb-label">KUB / Flat Plate</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Acute (3 views)"><span class="cb-label">Acute (3 views)</span></label>
+
+            <div class="sub-title" style="margin-top:12px">Skeletal Survey</div>
+            <label class="cb"><input type="checkbox" name="xray" value="Bone Age"><span class="cb-label">Bone Age</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Metastatic Survey"><span class="cb-label">Metastatic</span></label>
+
+            <div class="sub-title" style="margin-top:12px">Head &amp; Neck</div>
+            <label class="cb"><input type="checkbox" name="xray" value="Skull"><span class="cb-label">Skull</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Facial Bones"><span class="cb-label">Facial Bones</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Nasal Bones"><span class="cb-label">Nasal Bones</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Mandible"><span class="cb-label">Mandible</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="TM Joints"><span class="cb-label">TM Joints</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Soft Tissue Neck"><span class="cb-label">Soft Tissue Neck</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Orbits MRI/FB"><span class="cb-label">Orbits (MRI / FB)</span></label>
+            <label class="cb"><input type="checkbox" name="xray" value="Orbits Trauma"><span class="cb-label">Orbits (Trauma)</span></label>
+          </div>
+
+          <!-- UPPER EXTREMITIES -->
+          <div style="padding:12px;border-right:1px solid var(--border)">
+            <div class="sub-title">Upper Extremities</div>
+            <div style="display:flex;gap:4px;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:3px">R &nbsp; L &nbsp; Joint</div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Shoulder R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Shoulder L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Shoulder</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Clavicle R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Clavicle L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Clavicle</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="AC Joints R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="AC Joints L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">AC Joints</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Scapula R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Scapula L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Scapula</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Humerus R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Humerus L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Humerus</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Elbow R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Elbow L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Elbow</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Forearm R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Forearm L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Forearm</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Wrist R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Wrist L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Wrist</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Hand R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Hand L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Hand</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Digits R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Digits L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Digits</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Wrist & Scaphoid R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Wrist & Scaphoid L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Wrist &amp; Scaphoid</span></div>
+          </div>
+
+          <!-- LOWER EXTREMITIES -->
+          <div style="padding:12px">
+            <div class="sub-title">Lower Extremities</div>
+            <div style="display:flex;gap:4px;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:3px">R &nbsp; L &nbsp; Joint</div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Hip R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Hip L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Hip</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Femur R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Femur L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Femur</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Knee R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Knee L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Knee</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Knee Degenerative R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Knee Degenerative L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text);line-height:1.2">Knee Degenerative/Arthritic (Standing Bilateral)</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Tibia & Fibula R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Tibia & Fibula L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Tibia &amp; Fibula</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Ankle R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Ankle L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Ankle</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Foot R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Foot L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Foot</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Calcaneus R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Calcaneus L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Calcaneus</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="xray" value="Toes R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="xray" value="Toes L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Toes</span></div>
+            <label class="cb" style="margin-top:8px"><input type="checkbox" name="xray" value="Leg Lengths (Ouellette only)"><span class="cb-label" style="font-size:11px;color:var(--muted)">Leg lengths — Ouellette location only</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         APPOINTMENT REQUIRED — ULTRASOUND
+    ═══════════════════════════════════════ -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="fch-icon" style="background:#EBF4FF"><svg viewBox="0 0 24 24" fill="none" stroke="#0E7CF0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div>
+          <div class="fch-title">Ultrasound <span style="font-size:10px;font-weight:400;color:var(--red);margin-left:6px">⚠ Appointment Required</span></div>
+          <div class="fch-sub">Select all required studies</div>
+        </div>
+      </div>
+      <div class="form-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px">
+
+          <!-- GENERAL -->
+          <div style="padding:12px;border-right:1px solid var(--border)">
+            <div class="sub-title">General</div>
+            <label class="cb"><input type="checkbox" name="us" value="Abdomen & Pelvis Complete (incl. Transvaginal for females)"><span class="cb-label">Abdomen &amp; Pelvis Complete<span class="cb-sub">(incl. Transvaginal for females)</span></span></label>
+            <label class="cb"><input type="checkbox" name="us" value="No TV (No Transvaginal)"><span class="cb-label">No TV (No Transvaginal US)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Abdomen Complete (limited bladder & lower quadrants)"><span class="cb-label">Abdomen Complete<span class="cb-sub">(limited bladder &amp; lower quadrants)</span></span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Portal Hypertension/Cirrhosis"><span class="cb-label">Portal Hypertension / Cirrhosis</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Cirrhosis/Chronic Hepatitis Screening (q6mo)"><span class="cb-label">Cirrhosis / Chronic Hepatitis Screening (q6mo)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Abdomen Only"><span class="cb-label">Abdomen Only</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Kidneys & Bladder"><span class="cb-label">Kidneys &amp; Bladder*</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="R/O Appendicitis (incl. adjacent DDx)"><span class="cb-label">R/O Appendicitis<span class="cb-sub">(incl. adjacent DDx structures)</span></span></label>
+            <label class="cb"><input type="checkbox" name="us" value="R/O Pyloric Stenosis (0-6 months)"><span class="cb-label">R/O Pyloric Stenosis (0–6 months)</span></label>
+
+            <div class="sub-title" style="margin-top:12px">Pelvis</div>
+            <label class="cb"><input type="checkbox" name="us" value="Female Pelvis (incl. Transvaginal)"><span class="cb-label">Female Pelvis (incl. Transvaginal)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Male Pelvis (excludes transrectal)"><span class="cb-label">Male Pelvis (excludes transrectal)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Transrectal Prostate (incl. Bladder)"><span class="cb-label">Transrectal Prostate (incl. Bladder)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Bladder"><span class="cb-label">Bladder</span></label>
+            <label class="cb cb-indent"><input type="checkbox" name="us" value="Include Postvoid Residual/PVR"><span class="cb-label">Include Postvoid Residual / PVR</span></label>
+          </div>
+
+          <!-- SMALL PARTS + MUSCULOSKELETAL -->
+          <div style="padding:12px;border-right:1px solid var(--border)">
+            <div class="sub-title">Small Parts</div>
+            <label class="cb"><input type="checkbox" name="us" value="Thyroid Only"><span class="cb-label">Thyroid (only)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Complete Neck (incl. Thyroid & Salivary Glands)"><span class="cb-label">Complete Neck (incl. Thyroid &amp; Salivary Glands)</span></label>
+            <div class="inline-input"><label>Location:</label><input type="text" id="neck-loc" placeholder="e.g. submental area" style="flex:1;padding:4px 8px;font-size:12px"></div>
+            <label class="cb" style="margin-top:6px"><input type="checkbox" name="us" value="Lump/Lymph Nodes/Soft Tissue"><span class="cb-label">Lump / Lymph Node(s) / Soft Tissue</span></label>
+            <div class="inline-input"><label>Location:</label><input type="text" id="lump-loc" placeholder="e.g. submental area" style="flex:1;padding:4px 8px;font-size:12px"></div>
+            <label class="cb" style="margin-top:6px"><input type="checkbox" name="us" value="Groin for Hernia"><span class="cb-label">Groin for Hernia (Inguinal / Femoral)</span></label>
+            <div style="display:flex;gap:8px;padding-left:20px;margin-top:3px">
+              <label class="cb"><input type="checkbox" name="us" value="Groin Hernia R"><span class="cb-label" style="font-size:11px">R</span></label>
+              <label class="cb"><input type="checkbox" name="us" value="Groin Hernia L"><span class="cb-label" style="font-size:11px">L</span></label>
+              <label class="cb"><input type="checkbox" name="us" value="Groin Hernia B"><span class="cb-label" style="font-size:11px">B</span></label>
+            </div>
+            <label class="cb" style="margin-top:6px"><input type="checkbox" name="us" value="Scrotum (Testicular)"><span class="cb-label">Scrotum (Testicular)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Abdominal Wall"><span class="cb-label">Abdominal Wall</span></label>
+            <div style="font-size:10px;color:var(--muted);font-style:italic;margin-top:4px">* Baseline abdominal ultrasound may be performed</div>
+
+            <div class="sub-title" style="margin-top:14px">Musculoskeletal</div>
+            <label class="cb"><input type="checkbox" name="us" value="MSK - Include Relevant X-Rays"><span class="cb-label">Include Relevant X-Rays</span></label>
+            <div style="display:flex;gap:6px;font-size:10px;font-weight:600;color:var(--muted);padding-left:0;margin:4px 0 2px">R &nbsp; L &nbsp; Joint</div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="MSK Rotator Cuff R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="MSK Rotator Cuff L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Rotator Cuff</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="MSK Elbow R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="MSK Elbow L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Elbow</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="MSK Wrist R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="MSK Wrist L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Wrist</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="MSK Hand R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="MSK Hand L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Hand</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="MSK Hip R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="MSK Hip L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Hip</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="MSK Knee R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="MSK Knee L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Knee</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="MSK Ankle R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="MSK Ankle L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Ankle</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="MSK Foot R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="MSK Foot L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Foot</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="MSK Other R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="MSK Other L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Other</span></div>
+          </div>
+
+          <!-- VASCULAR + OBSTETRICAL -->
+          <div style="padding:12px">
+            <div class="sub-title">Vascular</div>
+            <label class="cb"><input type="checkbox" name="us" value="Carotid Arteries"><span class="cb-label">Carotid Arteries</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="CIMT"><span class="cb-label">CIMT</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Aorta/Iliac (AAA Screen)"><span class="cb-label">Aorta / Iliac (AAA Screen)</span></label>
+            <div style="margin-top:6px;font-size:11px;font-weight:600;color:var(--muted)">Lower Extremity</div>
+            <div style="display:flex;gap:6px;font-size:10px;font-weight:600;color:var(--muted);margin:4px 0 2px">R &nbsp; L &nbsp; B</div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="LE Arterial R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="LE Arterial L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="LE Arterial B" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Arterial</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="LE Venous DVT R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="LE Venous DVT L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="LE Venous DVT B" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Venous R/O DVT</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="LE Venous Insufficiency R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="LE Venous Insufficiency L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="LE Venous Insufficiency B" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Venous Insufficiency</span></div>
+            <label class="cb" style="margin-top:4px"><input type="checkbox" name="us" value="Include Venous Consultation"><span class="cb-label">Include Venous Consultation</span></label>
+            <div style="margin-top:8px;font-size:11px;font-weight:600;color:var(--muted)">Upper Extremity</div>
+            <div style="display:flex;gap:6px;font-size:10px;font-weight:600;color:var(--muted);margin:4px 0 2px">R &nbsp; L</div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="UE Arterial R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="UE Arterial L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Arterial</span></div>
+            <div style="display:flex;align-items:center;gap:4px;padding:2px 0"><input type="checkbox" name="us" value="UE Venous DVT R" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><input type="checkbox" name="us" value="UE Venous DVT L" style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer"><span style="font-size:12px;color:var(--text)">Venous R/O DVT</span></div>
+
+            <div class="sub-title" style="margin-top:14px">Obstetrical</div>
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:4px">LMP:</div>
+            <input type="date" id="lmp-date" style="margin-bottom:8px;font-size:12px;padding:5px 8px">
+            <label class="cb"><input type="checkbox" name="us" value="OB 1st Trimester (<11 weeks)"><span class="cb-label">1st Trimester (&lt;11 weeks)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="OB Series (NT 11-14wk + Anatomy 18-20wk)"><span class="cb-label">OB Series (NT 11–14wk + Anatomy 18–20wk)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="EFTS/NT (11-14 weeks)"><span class="cb-label">EFTS / NT (11–14 weeks)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="Anatomy Scan (18-20 weeks)"><span class="cb-label">Anatomy Scan (18–20 weeks)</span></label>
+            <label class="cb"><input type="checkbox" name="us" value="2nd/3rd Trimester (Non Routine)"><span class="cb-label">2nd / 3rd Trimester (Non Routine)</span></label>
+            <div class="inline-input"><label>Indication:</label><input type="text" id="ob-indication" placeholder="Indication" style="flex:1;padding:4px 8px;font-size:12px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         BONE MINERAL DENSITY + ECHO + BREAST + NUCLEAR
+    ═══════════════════════════════════════ -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="fch-icon" style="background:#F3EEFF"><svg viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+        <div><div class="fch-title">Additional Studies</div><div class="fch-sub">Bone density · Echocardiography · Breast imaging · Nuclear medicine · Vein clinic</div></div>
+      </div>
+      <div class="form-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+          <!-- LEFT COLUMN -->
+          <div>
+            <!-- BONE MINERAL DENSITY -->
+            <div style="border:1px solid var(--border);border-radius:8px;padding:13px;margin-bottom:14px">
+              <div class="sub-title">Bone Mineral Density</div>
+              <div style="display:flex;gap:16px;flex-wrap:wrap">
+                <label class="cb"><input type="checkbox" name="bmd" value="BMD First"><span class="cb-label">First</span></label>
+                <label class="cb"><input type="checkbox" name="bmd" value="BMD Routine"><span class="cb-label">Routine</span></label>
+                <label class="cb"><input type="checkbox" name="bmd" value="BMD High Risk"><span class="cb-label">High Risk</span></label>
+              </div>
+              <div class="inline-input" style="margin-top:8px"><label>Date of last BMD:</label><input type="date" id="last-bmd" style="flex:1;padding:4px 8px;font-size:12px"></div>
+            </div>
+
+            <!-- DIGITAL BREAST IMAGING -->
+            <div style="border:1px solid var(--border);border-radius:8px;padding:13px;margin-bottom:14px">
+              <div class="sub-title">Digital Breast Imaging <span style="font-size:10px;color:var(--red);font-weight:400;text-transform:none">(appointment required)</span></div>
+              <label class="cb"><input type="checkbox" name="breast" value="Mammography Routine"><span class="cb-label">Mammography — Routine</span></label>
+              <label class="cb"><input type="checkbox" name="breast" value="Mammography Diagnostic"><span class="cb-label">Mammography — Diagnostic*</span></label>
+              <label class="cb"><input type="checkbox" name="breast" value="Mammography OB-SP"><span class="cb-label">Mammography — OB-SP</span></label>
+              <label class="cb"><input type="checkbox" name="breast" value="Male Breast Bilateral US"><span class="cb-label">Male Breast — Bilateral Ultrasound</span></label>
+              <div style="margin-top:8px">
+                <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px">Breast Ultrasound</div>
+                <div style="display:flex;gap:10px">
+                  <label class="cb"><input type="checkbox" name="breast" value="Breast US R"><span class="cb-label">R</span></label>
+                  <label class="cb"><input type="checkbox" name="breast" value="Breast US L"><span class="cb-label">L</span></label>
+                  <label class="cb"><input type="checkbox" name="breast" value="Breast US B"><span class="cb-label">B</span></label>
+                </div>
+                <div class="inline-input" style="margin-top:6px"><label>Region of interest:</label><input type="text" id="breast-roi" placeholder="e.g. upper outer quadrant" style="flex:1;padding:4px 8px;font-size:12px"></div>
+              </div>
+            </div>
+
+            <!-- VEIN CLINIC -->
+            <div style="border:1px solid var(--border);border-radius:8px;padding:13px">
+              <div class="sub-title">Vein Clinic</div>
+              <label class="cb"><input type="checkbox" name="vein" value="Vein Clinic Assessment/Consultation"><span class="cb-label">Assessment / Consultation</span></label>
+              <div class="fg" style="margin-top:8px"><label class="fl">Reason for referral</label><textarea id="vein-reason" placeholder="Please describe reason for vein clinic referral..." style="min-height:55px;resize:vertical;font-size:12px"></textarea></div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div>
+            <!-- ECHOCARDIOGRAPHY -->
+            <div style="border:1px solid var(--border);border-radius:8px;padding:13px;margin-bottom:14px">
+              <div class="sub-title">Echocardiography <span style="font-size:10px;color:var(--red);font-weight:400;text-transform:none">(appointment required)</span></div>
+              <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-style:italic">Accredited by CorHealth Ontario</div>
+              <label class="cb"><input type="checkbox" name="echo" value="2D Echocardiogram"><span class="cb-label">2D Echocardiogram</span></label>
+              <div class="fg" style="margin-top:8px"><label class="fl">Indication / history (required)</label><textarea id="echo-indication" placeholder="Cardiac history, symptoms, medications..." style="min-height:60px;resize:vertical;font-size:12px"></textarea></div>
+            </div>
+
+            <!-- NUCLEAR MEDICINE -->
+            <div style="border:1px solid var(--border);border-radius:8px;padding:13px">
+              <div class="sub-title">Nuclear Medicine <span style="font-size:10px;color:var(--red);font-weight:400;text-transform:none">(appointment required)</span></div>
+              <label class="cb"><input type="checkbox" name="nuclear" value="Nuclear Cardiac Stress Test"><span class="cb-label">Nuclear Cardiac Stress Test</span></label>
+              <label class="cb"><input type="checkbox" name="nuclear" value="Persantine"><span class="cb-label">Persantine</span></label>
+              <label class="cb"><input type="checkbox" name="nuclear" value="HIDA"><span class="cb-label">HIDA</span></label>
+              <label class="cb"><input type="checkbox" name="nuclear" value="Bone Scan"><span class="cb-label">Bone Scan</span></label>
+              <div class="inline-input" style="margin-top:2px"><label style="font-size:11px;color:var(--muted)">Specify:</label><input type="text" id="nuclear-spec" placeholder="Additional details" style="flex:1;padding:4px 8px;font-size:12px"></div>
+              <label class="cb" style="margin-top:6px"><input type="checkbox" name="nuclear" value="Myocardial Wall Motion (MUGA) with Ejection Fraction"><span class="cb-label">Myocardial Wall Motion (MUGA) with Ejection Fraction</span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- MEDICAL HISTORY NOTE -->
+        <div style="margin-top:16px;padding:11px 14px;background:var(--light);border-radius:7px;border:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.6">
+          <strong>Please attach:</strong> Present and past medical history, list of current medications, physical findings and relevant test results and reports. All facilities are scent-free.
+        </div>
+      </div>
+    </div>
+
+    <!-- PROVIDER SIGNATURE -->
+    <div class="form-card">
+      <div class="form-card-header">
+        <div class="fch-icon" style="background:#E6F9F2"><svg viewBox="0 0 24 24" fill="none" stroke="#0A9E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div><div class="fch-title">Provider Signature</div><div class="fch-sub">Required to authorize this requisition</div></div>
+      </div>
+      <div class="form-body">
+        <div class="gr2" style="margin-bottom:14px">
+          <div class="fg"><label class="fl">Appointment date</label><input type="date" id="appt-date2"></div>
+          <div class="fg"><label class="fl">Appointment time</label><input type="text" id="appt-time" placeholder="e.g. 10:30 AM"></div>
+        </div>
+        <label class="fl" style="margin-bottom:7px;display:block">Provider signature <span class="req">*</span></label>
+        <div class="sig-wrap" id="sig-container">
+          <canvas id="sig"></canvas>
+          <div class="sig-bar">
+            <span class="sig-hint" id="sig-hint">Draw signature above</span>
+            <button class="btn-clr" onclick="clearSig()">Clear</button>
+          </div>
+        </div>
+      </div>
+      <div class="submit-bar">
+        <span class="submit-note">PHIPA compliant · Encrypted · Requisition delivered via eFax + patient notified by SMS</span>
+        <div class="submit-actions">
+          <button class="btn-draft" onclick="saveDraft()">Save Draft</button>
+          <button class="btn-send" onclick="submitReq()" id="submit-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span id="submit-btn-label">Send Requisition</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- SUCCESS -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-card">
+    <div class="success-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h2>Requisition Sent!</h2>
+    <p id="success-msg">Delivered to lab via eFax. Patient notified by SMS and email. Tracking active on dashboard.</p>
+    <div class="success-ref" id="success-ref">REQ-2026-0025</div>
+    <!-- SMS confirmation -->
+    <div id="sms-confirm" style="background:var(--dark);border-radius:10px;padding:12px 14px;margin-bottom:18px;text-align:left;max-width:320px;margin-left:auto;margin-right:auto">
+      <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:7px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:0.08em">✓ SMS SENT TO PATIENT</div>
+      <div id="sms-confirm-text" style="font-size:12px;color:#fff;line-height:1.5;background:#0A9E6E;border-radius:8px 8px 2px 8px;padding:9px 11px"></div>
+    </div>
+    <div class="success-acts">
+      <button class="btn-dash" onclick="window.location.href='dashboard.html'">View Dashboard</button>
+      <button class="btn-again" onclick="resetForm()">New Requisition</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── LOAD CLINIC SETTINGS ──
+(function loadClinicSettings() {
+  const DEFAULTS = { clinicName:'City Health Clinic', billing:'ON-2847391', addr:'145 King St E, Oshawa, ON L1H 1B5', phone:'(905) 555-0142', fax:'(905) 555-0143', email:'admin@cityhealthclinic.ca', provider:'Dr. Alex Chen' };
+  const s = {...DEFAULTS, ...JSON.parse(localStorage.getItem('requify_clinic_settings') || '{}')};
+  const set = (id, v) => { const el = document.getElementById(id); if (el && !el.value) el.value = v; };
+  set('prov-name', s.provider);
+  set('prov-billing', s.billing);
+  // Update sidebar labels
+  const cn = document.querySelector('.sidebar-clinic-name');
+  if (cn) cn.textContent = s.clinicName;
+  const un = document.querySelector('.user-name');
+  if (un) un.textContent = s.provider;
+  // Store for SMS preview
+  window._clinicSettings = s;
+})();
+
+// ── OHIP MASKING + VALIDATION ──
+function maskOHIP(input) {
+  let digits = input.value.replace(/\D/g, '').substring(0, 10);
+  let masked = '';
+  if (digits.length > 0) masked = digits.substring(0, 4);
+  if (digits.length > 4) masked += '-' + digits.substring(4, 7);
+  if (digits.length > 7) masked += '-' + digits.substring(7, 10);
+  input.value = masked;
+  const status = document.getElementById('ohip-status');
+  const hint = document.getElementById('ohip-hint');
+  if (digits.length === 0) {
+    status.style.display = 'none';
+    input.style.borderColor = '';
+    hint.style.color = 'var(--muted)';
+    hint.textContent = 'Format: 1234-567-890 (10 digits)';
+  } else if (digits.length < 10) {
+    status.style.display = 'inline';
+    status.style.color = 'var(--amber)';
+    status.textContent = digits.length + '/10';
+    input.style.borderColor = 'var(--amber)';
+    hint.style.color = 'var(--amber)';
+    hint.textContent = (10 - digits.length) + ' digits remaining';
+  } else {
+    status.style.display = 'inline';
+    status.style.color = 'var(--green)';
+    status.textContent = '✓ Valid';
+    input.style.borderColor = 'var(--green)';
+    hint.style.color = 'var(--green)';
+    hint.textContent = 'OHIP number looks good';
+    input.classList.remove('err');
+  }
+}
+let apptTimeLocked = false;
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const ss = String(now.getSeconds()).padStart(2,'0');
+  const tEl = document.getElementById('live-time');
+  const dEl = document.getElementById('live-date');
+  if (tEl) tEl.textContent = hh+':'+mm+':'+ss;
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  if (dEl) dEl.textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+  if (!apptTimeLocked) {
+    const tField = document.getElementById('appt-time');
+    if (tField) tField.value = hh+':'+mm;
+  }
+  const dField = document.getElementById('appt-date');
+  if (dField && !dField.value) dField.value = now.toISOString().split('T')[0];
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function setApptTimeNow() {
+  apptTimeLocked = true;
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const f = document.getElementById('appt-time');
+  f.value = hh+':'+mm;
+  f.style.background = '#E6F9F2';
+  f.style.color = 'var(--green)';
+  f.title = 'Time locked. Click to unlock.';
+  f.onclick = () => {
+    apptTimeLocked = false;
+    f.style.background = 'var(--blue-pale)';
+    f.style.color = 'var(--blue)';
+    f.title = 'Click to lock current time';
+    f.onclick = setApptTimeNow;
+  };
+}
+
+// ── LAB DIRECTORY ──
+const LAB_DIRECTORY = {
+  'clear':           { name:'Clear Medical Imaging', fax:'519-256-3221', email:'info@clearimaging.ca', addr:'Windsor, ON' },
+  'oshawa-diag':     { name:'Oshawa Diagnostic Lab', fax:'(905) 555-0200', email:'intake@oshawadiag.ca', addr:'Oshawa, ON' },
+  'durham-imaging':  { name:'Durham Imaging Centre', fax:'(905) 555-0300', email:'orders@durhamimaging.ca', addr:'Ajax, ON' },
+  'lifelabs-oshawa': { name:'LifeLabs Oshawa', fax:'(905) 555-0400', email:'oshawa@lifelabs.com', addr:'Oshawa, ON' },
+  'lifelabs-whitby': { name:'LifeLabs Whitby', fax:'(905) 555-0500', email:'whitby@lifelabs.com', addr:'Whitby, ON' },
+  'dynacare':        { name:'Dynacare Laboratories', fax:'(416) 555-0600', email:'intake@dynacare.ca', addr:'Toronto, ON' },
+  'alpha-imaging':   { name:'Alpha Imaging', fax:'(416) 555-0700', email:'orders@alphaimaging.ca', addr:'Toronto, ON' },
+};
+
+function updateLabDetails(val) {
+  const detailDiv = document.getElementById('lab-details');
+  const customDiv = document.getElementById('custom-lab-fields');
+  const nameEl = document.getElementById('lab-detail-name');
+  const infoEl = document.getElementById('lab-detail-info');
+  const btnLabel = document.getElementById('submit-btn-label');
+
+  if (val === 'custom') {
+    detailDiv.style.display = 'none';
+    customDiv.style.display = 'block';
+    if (btnLabel) btnLabel.textContent = 'Send Requisition';
+    return;
+  }
+  customDiv.style.display = 'none';
+
+  const lab = LAB_DIRECTORY[val];
+  if (!lab) { detailDiv.style.display = 'none'; if(btnLabel) btnLabel.textContent='Send Requisition'; return; }
+
+  detailDiv.style.display = 'block';
+  nameEl.textContent = lab.name;
+  infoEl.textContent = 'Fax: '+lab.fax+'  ·  Email: '+lab.email+'  ·  '+lab.addr;
+  if (btnLabel) btnLabel.textContent = 'Send to '+lab.name;
+  updateSMSPreview();
+}
+
+function updateSMSPreview() {
+  const preview = document.getElementById('sms-preview-text');
+  if (!preview) return;
+  const ptFirst = document.getElementById('pt-first')?.value || '[Patient]';
+  const labSel = document.getElementById('lab-select')?.value || '';
+  const lab = LAB_DIRECTORY[labSel];
+  const labName = lab ? lab.name : (document.getElementById('custom-lab-name')?.value || '[Lab]');
+  const prov = document.getElementById('prov-name')?.value || 'your provider';
+  preview.textContent = `Hi ${ptFirst}, your requisition from ${prov} has been submitted to ${labName}. Please bring this SMS or your health card to your appointment. Ref: [REQ#] — Requify Health`;
+}
+
+// Auto-sync patient phone/email to notify fields when patient is selected
+function syncNotifyFields() {
+  const cell = document.getElementById('pt-cell')?.value || '';
+  const email = document.getElementById('pt-email')?.value || '';
+  const nc = document.getElementById('notify-cell');
+  const ne = document.getElementById('notify-email');
+  if (nc && !nc.value && cell) nc.value = cell;
+  if (ne && !ne.value && email) ne.value = email;
+  updateSMSPreview();
+}
+
+// Watch patient name changes to update SMS preview
+['pt-first','prov-name','lab-select'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', updateSMSPreview);
+  if (el) el.addEventListener('input', updateSMSPreview);
+});
+
+// ── PATIENT ROSTER (demo + from previous submissions) ──
+const PATIENT_ROSTER = [
+  {id:'p1',last:'Garrett',first:'Anna',dob:'1970-02-14',hcard:'3456-789-012',ver:'AC',cell:'(416) 555-0134',home:'',addr:'22 Oak St, Oshawa, ON L1G 1A1',email:'anna.garrett@email.com'},
+  {id:'p2',last:'Nguyen',first:'Jorge',dob:'1985-09-03',hcard:'5678-901-234',ver:'JN',cell:'(905) 555-0187',home:'',addr:'88 Pine Ave, Ajax, ON L1S 2B2',email:'jorge.nguyen@email.com'},
+  {id:'p3',last:'Lee',first:'Sarah',dob:'1992-03-19',hcard:'7890-123-456',ver:'SL',cell:'(647) 555-0212',home:'',addr:'45 Maple Rd, Whitby, ON L1N 3C3',email:'sarah.lee@email.com'},
+  {id:'p4',last:'Wright',first:'Michael',dob:'1966-06-07',hcard:'2345-678-901',ver:'MW',cell:'(416) 555-0098',home:'(905) 555-0099',addr:'12 Elm Dr, Oshawa, ON L1H 4D4',email:'michael.wright@email.com'},
+  {id:'p5',last:'Adams',first:'Eva',dob:'1978-11-28',hcard:'9012-345-678',ver:'EA',cell:'(905) 555-0245',home:'',addr:'67 Birch Lane, Oshawa, ON L1J 5E5',email:'eva.adams@email.com'},
+  {id:'p6',last:'Kim',first:'David',dob:'1955-04-22',hcard:'1122-334-455',ver:'DK',cell:'(905) 555-0311',home:'(905) 555-0312',addr:'34 Cedar Blvd, Ajax, ON L1T 6F6',email:'david.kim@email.com'},
+  {id:'p7',last:'Sharma',first:'Priya',dob:'1990-12-05',hcard:'6677-889-900',ver:'PS',cell:'(416) 555-0422',home:'',addr:'91 Willow St, Whitby, ON L1P 7G7',email:'priya.sharma@email.com'},
+  {id:'p8',last:'Charlton',first:'Brittany',dob:'1995-01-02',hcard:'2233-549-977',ver:'GY',cell:'(000) 000-0000',home:'(647) 568-9041',addr:'108-755 Grand Maris Rd E, Oshawa, ON',email:'brittany.charlton@email.com'},
+];
+
+function getAllPatients() {
+  const pts = [...PATIENT_ROSTER];
+  try {
+    const stored = JSON.parse(localStorage.getItem('requify_submissions') || '[]');
+    stored.forEach(r => {
+      if (r.ptLast && !pts.find(p => p.hcard === r.ptHcard)) {
+        pts.push({id:'s-'+r.id,last:r.ptLast,first:r.ptFirst,dob:r.ptDob,hcard:r.ptHcard||'',ver:r.ptVer||'',cell:r.ptCell||'',home:'',addr:r.ptAddr||'',email:''});
+      }
+    });
+  } catch(e){}
+  return pts;
+}
+
+function searchPatients(query) {
+  const wrap = document.getElementById('search-wrap');
+  if (wrap) wrap.style.borderColor = query ? 'var(--blue)' : 'var(--border)';
+  const clr = document.getElementById('pt-search-clear');
+  if (clr) clr.style.display = query ? 'block' : 'none';
+  if (!query.trim()) { hideDropdown(); return; }
+  const q = query.toLowerCase();
+  const results = getAllPatients().filter(p =>
+    (p.last+' '+p.first).toLowerCase().includes(q) ||
+    (p.first+' '+p.last).toLowerCase().includes(q) ||
+    p.hcard.toLowerCase().replace(/-/g,'').includes(q.replace(/-/g,'')) ||
+    p.dob.includes(q)
+  ).slice(0,8);
+  renderDropdown(results);
+}
+
+function renderDropdown(results) {
+  const inner = document.getElementById('pt-dropdown-inner');
+  if (!inner) return;
+  if (!results.length) {
+    inner.innerHTML = '<div style="padding:14px 16px;font-size:13px;color:var(--muted);text-align:center">No patients found · <span style="color:var(--blue);cursor:pointer" onclick="hideDropdown()">Enter manually below</span></div>';
+  } else {
+    inner.innerHTML = results.map(p => `
+      <div onclick="selectPatient('${p.id}')" style="display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--light);transition:background 0.12s" onmouseover="this.style.background='var(--light)'" onmouseout="this.style.background=''">
+        <div style="width:34px;height:34px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;font-family:'Syne',sans-serif">${p.first[0]}${p.last[0]}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">${p.last}, ${p.first}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px">DOB: ${p.dob} &nbsp;·&nbsp; OHIP: ${p.hcard}${p.ver?' '+p.ver:''}</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);text-align:right;flex-shrink:0">${p.cell||p.home||''}</div>
+      </div>
+    `).join('');
+  }
+  const dd = document.getElementById('pt-dropdown');
+  if (dd) dd.style.display = 'block';
+}
+
+function showDropdown() {
+  const q = document.getElementById('pt-search')?.value || '';
+  if (q.trim().length > 0) searchPatients(q);
+}
+function hideDropdown() {
+  const dd = document.getElementById('pt-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+function selectPatient(id) {
+  const p = getAllPatients().find(x => x.id === id);
+  if (!p) return;
+  const set = (elId, val) => { const el = document.getElementById(elId); if(el) el.value = val||''; };
+  set('pt-last', p.last); set('pt-first', p.first); set('pt-dob', p.dob);
+  set('pt-hcard', p.hcard); set('pt-ver', p.ver); set('pt-cell', p.cell);
+  set('pt-home', p.home); set('pt-addr', p.addr); set('pt-email', p.email);
+  const badge = document.getElementById('pt-selected-badge');
+  if (badge) { badge.style.display = 'flex'; }
+  const nm = document.getElementById('pt-selected-name');
+  const mt = document.getElementById('pt-selected-meta');
+  if (nm) nm.textContent = p.first+' '+p.last;
+  if (mt) mt.textContent = 'DOB: '+p.dob+' · OHIP: '+p.hcard;
+  hideDropdown();
+  const srch = document.getElementById('pt-search');
+  if (srch) srch.value = p.first+' '+p.last;
+  ['pt-last','pt-first','pt-dob','pt-hcard'].forEach(id => document.getElementById(id)?.classList.remove('err'));
+  syncNotifyFields();
+  updateSMSPreview();
+}
+
+function clearPatientSearch() {
+  const set = (id, v) => { const el = document.getElementById(id); if(el) el.value = v||''; };
+  set('pt-search',''); set('pt-last',''); set('pt-first',''); set('pt-dob','');
+  set('pt-hcard',''); set('pt-ver',''); set('pt-cell',''); set('pt-home','');
+  set('pt-addr',''); set('pt-email','');
+  const clr = document.getElementById('pt-search-clear');
+  if (clr) clr.style.display = 'none';
+  const badge = document.getElementById('pt-selected-badge');
+  if (badge) badge.style.display = 'none';
+  hideDropdown();
+  const wrap = document.getElementById('search-wrap');
+  if (wrap) wrap.style.borderColor = 'var(--border)';
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#search-wrap') && !e.target.closest('#pt-dropdown')) hideDropdown();
+});
+
+// ── SIGNATURE ──
+const canvas = document.getElementById('sig'), ctx = canvas.getContext('2d');
+let drawing = false, hasSig = false;
+function resizeCanvas() {
+  const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio||1;
+  canvas.width = r.width*dpr; canvas.height = r.height*dpr; ctx.scale(dpr,dpr);
+  ctx.strokeStyle='#0D1B2A'; ctx.lineWidth=1.8; ctx.lineCap='round'; ctx.lineJoin='round';
+}
+resizeCanvas(); window.addEventListener('resize',resizeCanvas);
+function getPos(e){const r=canvas.getBoundingClientRect();return e.touches?{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}:{x:e.clientX-r.left,y:e.clientY-r.top};}
+canvas.addEventListener('mousedown',e=>{drawing=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+canvas.addEventListener('mousemove',e=>{if(!drawing)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();markSig();});
+canvas.addEventListener('mouseup',()=>drawing=false);canvas.addEventListener('mouseleave',()=>drawing=false);
+canvas.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();drawing=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();e.stopPropagation();if(!drawing)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();markSig();},{passive:false});
+canvas.addEventListener('touchend',e=>{e.stopPropagation();drawing=false;},{passive:false});
+function markSig(){hasSig=true;document.getElementById('sig-container').classList.add('has-sig');document.getElementById('sig-hint').textContent='Signature captured';}
+function clearSig(){ctx.clearRect(0,0,canvas.width,canvas.height);hasSig=false;document.getElementById('sig-container').classList.remove('has-sig');document.getElementById('sig-hint').textContent='Draw signature above';}
+
+function getChecked(name){return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(c=>c.value);}
+
+function validate(){
+  let ok=true;
+  ['pt-last','pt-first','pt-dob'].forEach(id=>{const el=document.getElementById(id);if(!el||!el.value.trim()){if(el)el.classList.add('err');ok=false;}else el.classList.remove('err');});
+  // OHIP: must be exactly 10 digits
+  const ohipEl = document.getElementById('pt-hcard');
+  const ohipDigits = (ohipEl?.value||'').replace(/\D/g,'');
+  if (ohipDigits.length !== 10) {
+    ohipEl.classList.add('err');
+    ohipEl.style.borderColor = 'var(--red)';
+    document.getElementById('ohip-hint').style.color = 'var(--red)';
+    document.getElementById('ohip-hint').textContent = '⚠ OHIP must be exactly 10 digits';
+    ok = false;
+  } else {
+    ohipEl.classList.remove('err');
+  }
+  const labSel = document.getElementById('lab-select')?.value || '';
+  if (!labSel) { document.getElementById('lab-select').style.borderColor='var(--red)'; alert('Please select a destination lab before sending.'); ok=false; }
+  else document.getElementById('lab-select').style.borderColor='';
+  const allTests=[...getChecked('xray'),...getChecked('us'),...getChecked('bmd'),...getChecked('breast'),...getChecked('echo'),...getChecked('nuclear'),...getChecked('vein')];
+  if(!allTests.length){alert('Please select at least one exam before submitting.');ok=false;}
+  if(!hasSig){document.getElementById('sig-container').style.borderColor='var(--red)';ok=false;}
+  else document.getElementById('sig-container').style.borderColor='';
+  const hx=document.getElementById('clinical-hx');
+  if(!hx||!hx.value.trim()){if(hx)hx.classList.add('err');ok=false;}
+  return ok;
+}
+
+// ── PDF — Clear Medical Imaging form layout ──
+
+// ── PDF — Clear Medical Imaging form layout (fixed) ──
+function buildPDF(d){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'letter'});
+  const W=216, H=279, M=7;
+
+  // ── HELPERS ──
+  function setFont(sz,style,color){
+    doc.setFontSize(sz);
+    doc.setFont('helvetica',style||'normal');
+    doc.setTextColor(...(color||[13,27,42]));
+  }
+  function bar(x,y,w,h,r,g,b){doc.setFillColor(r,g,b);doc.rect(x,y,w,h,'F');}
+  function outline(x,y,w,h){doc.setDrawColor(160,170,180);doc.setLineWidth(0.25);doc.rect(x,y,w,h);}
+  function hline(x,y,w){doc.setDrawColor(180,190,200);doc.setLineWidth(0.2);doc.line(x,y,x+w,y);}
+  function vline(x,y,h){doc.setDrawColor(180,190,200);doc.setLineWidth(0.2);doc.line(x,y,x,y+h);}
+
+  // Label + value stacked in a cell
+  function cell(x,y,w,label,value){
+    setFont(5.5,'bold',[100,110,120]);
+    doc.text(label,x+1,y+2.2);
+    setFont(8,'normal',[10,20,35]);
+    const v=String(value||'');
+    const wrapped=doc.splitTextToSize(v,w-2);
+    doc.text(wrapped[0]||'',x+1,y+6.5);
+  }
+
+  // Checkbox + label
+  function chk(x,y,ticked,label,maxW){
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x,y,3.2,3.2);
+    if(ticked){
+      doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);
+      doc.line(x+0.4,y+1.7,x+1.3,y+2.8);
+      doc.line(x+1.3,y+2.8,x+3.0,y+0.4);
+    }
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);
+    setFont(6.8,'normal',[20,30,45]);
+    const lbl=maxW?doc.splitTextToSize(label,maxW)[0]:label;
+    doc.text(lbl,x+4.2,y+2.6);
+  }
+
+  // R/L pair checkboxes + label
+  function rl2(x,y,rTick,lTick,label){
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(x,y,3.2,3.2);
+    if(rTick){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+0.4,y+1.7,x+1.3,y+2.8);doc.line(x+1.3,y+2.8,x+3.0,y+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    doc.rect(x+4.5,y,3.2,3.2);
+    if(lTick){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+4.9,y+1.7,x+5.8,y+2.8);doc.line(x+5.8,y+2.8,x+7.5,y+0.4);}
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);
+    setFont(6.8,'normal',[20,30,45]);
+    doc.text(label,x+9.5,y+2.6);
+  }
+
+  // R/L/B triple checkboxes + label
+  function rl3(x,y,rTick,lTick,bTick,label){
+    [rTick,lTick,bTick].forEach((t,i)=>{
+      doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x+i*4.5,y,3.2,3.2);
+      if(t){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+i*4.5+0.4,y+1.7,x+i*4.5+1.3,y+2.8);doc.line(x+i*4.5+1.3,y+2.8,x+i*4.5+3.0,y+0.4);}
+      doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);
+    });
+    setFont(6.8,'normal',[20,30,45]);
+    doc.text(label,x+15,y+2.6);
+  }
+
+  // Section bar (dark header)
+  function secBar(x,y,w,label,dark){
+    const [r,g,b]=dark?[28,38,50]:[55,70,82];
+    bar(x,y,w,5.5,r,g,b);
+    setFont(7,'bold',[255,255,255]);
+    doc.text(label,x+2,y+3.9);
+  }
+
+  // Blue subheading
+  function subH(x,y,label){
+    setFont(6.5,'bold',[20,70,160]);
+    doc.text(label,x,y);
+  }
+
+  const LH=4.2; // line height per checkbox row
+
+  // ══════════════════════════════════════════
+  // REQUIFY HEADER STRIP
+  // ══════════════════════════════════════════
+  bar(0,0,W,6.5,14,100,210);
+  setFont(8,'bold',[255,255,255]);
+  doc.text('REQUIFY HEALTH — Digital Requisition',M,4.5);
+  setFont(7,'normal',[255,255,255]);
+  doc.text('REF: '+d.ref+'   Generated: '+new Date().toLocaleDateString('en-CA'),120,4.5);
+
+  // FORM TITLE BAR
+  bar(0,6.5,W,9,28,38,50);
+  setFont(13,'bold',[255,255,255]);
+  doc.text('GENERAL REQUISITION FORM',M,13);
+  setFont(7,'bold',[255,255,255]);
+  doc.text('FOR APPOINTMENT BOOKING CALL 519-256-4914  OR FAX: 519-256-3221',110,10);
+  setFont(6,'normal',[200,215,230]);
+  doc.text('Please provide 24 hours advance notice if unable to keep appointment.',110,13.5);
+  doc.text('Please arrive 10 minutes early with your health card and this form.',110,16.5);
+
+  let Y=18; // current Y cursor
+
+  // ══════════════════════════════════════════
+  // PATIENT + PROVIDER INFO (two columns)
+  // ══════════════════════════════════════════
+  const colW=(W-M*2)/2-1;
+  const ptX=M, pvX=M+colW+2;
+  const infoH=42;
+
+  // Patient box
+  outline(ptX,Y,colW,infoH);
+  secBar(ptX,Y,colW,'PATIENT INFORMATION',true);
+  let py=Y+7;
+  // Row 1: Last Name | First Name
+  cell(ptX+1,py,colW/2-1,'LAST NAME',d.ptLast);
+  vline(ptX+colW/2,py,9);
+  cell(ptX+colW/2+1,py,colW/2-2,'FIRST NAME',d.ptFirst);
+  py+=10; hline(ptX,py,colW);
+  // Row 2: Cell | Home | DOB
+  const row2w=colW/3;
+  cell(ptX+1,py,row2w-1,'PHONE (CELL)',d.ptCell);
+  vline(ptX+row2w,py,9);
+  cell(ptX+row2w+1,py,row2w-1,'PHONE (HOME)',d.ptHome||'');
+  vline(ptX+row2w*2,py,9);
+  cell(ptX+row2w*2+1,py,row2w-1,'DATE OF BIRTH',d.ptDob);
+  py+=10; hline(ptX,py,colW);
+  // Row 3: Address | Health Card | Ver | Appt Date | Time
+  cell(ptX+1,py,colW*0.45,'ADDRESS',d.ptAddr||'');
+  vline(ptX+colW*0.45,py,9);
+  cell(ptX+colW*0.45+1,py,colW*0.22,'HEALTH CARD NO.',d.ptHcard);
+  vline(ptX+colW*0.67,py,9);
+  cell(ptX+colW*0.67+1,py,colW*0.1,'VER.',d.ptVer||'');
+  vline(ptX+colW*0.77,py,9);
+  cell(ptX+colW*0.77+1,py,colW*0.12,'APPT DATE',d.apptDate||'');
+  vline(ptX+colW*0.89,py,9);
+  cell(ptX+colW*0.89+1,py,colW*0.1,'TIME',d.apptTime||'');
+
+  // Provider box
+  outline(pvX,Y,colW,infoH);
+  secBar(pvX,Y,colW,'PROVIDER INFORMATION',true);
+  let pvy=Y+7;
+  // Row 1: Provider Name | Billing No
+  cell(pvX+1,pvy,colW*0.68,'PROVIDER NAME (PRINT)',d.provName);
+  vline(pvX+colW*0.68,pvy,9);
+  cell(pvX+colW*0.68+1,pvy,colW*0.31,'BILLING NO.',d.provBilling||'');
+  pvy+=10; hline(pvX,pvy,colW);
+  // Row 2: Signature | CC
+  setFont(5.5,'bold',[100,110,120]);
+  doc.text('PROVIDER SIGNATURE',pvX+1,pvy+2.2);
+  vline(pvX+colW*0.68,pvy,11);
+  cell(pvX+colW*0.68+1,pvy,colW*0.31,'CC',d.provCC||'');
+  // Signature image
+  try{doc.addImage(canvas.toDataURL('image/png'),'PNG',pvX+1,pvy+3,colW*0.65,7);}catch(e){}
+  pvy+=12; hline(pvX,pvy,colW);
+  // Row 3: Clinical Hx | STAT
+  cell(pvX+1,pvy,colW*0.68,'CLINICAL HX / REASON',d.clinicalHx||'');
+  vline(pvX+colW*0.68,pvy,9);
+  if(d.stat){
+    bar(pvX+colW*0.69,pvy+0.5,colW*0.3,8,210,30,30);
+    setFont(10,'bold',[255,255,255]);
+    doc.text('STAT',pvX+colW*0.78,pvy+6);
+  } else {
+    cell(pvX+colW*0.68+1,pvy,colW*0.31,'PRIORITY','Routine');
+  }
+
+  Y+=infoH+2;
+
+  // ══════════════════════════════════════════
+  // XRAY (LEFT) + ULTRASOUND (RIGHT) PANEL
+  // ══════════════════════════════════════════
+  const panW=colW; // each half
+  const xX=M, uX=M+panW+2;
+
+  // ── X-RAY PANEL ──
+  secBar(xX,Y,panW,'NO APPOINTMENT REQUIRED',true); Y+=5.5;
+  secBar(xX,Y,panW,'X-RAY'); Y+=5.5;
+  const xrayStartY=Y;
+
+  // X-Ray has 3 sub-columns
+  const xc=panW/3;
+  const xX1=xX+1, xX2=xX+xc+1, xX3=xX+xc*2+1;
+  let xY1=Y, xY2=Y, xY3=Y;
+
+  // Col 1: Chest + Spine & Pelvis
+  subH(xX1,xY1+1,'CHEST'); xY1+=LH;
+  [['Chest PA & LAT','Chest PA & LAT R'],['Sternum','Sternum'],['SC Joints','SC Joints'],['Ribs R','Ribs R'],['Ribs L','Ribs L']].forEach(([lbl,val])=>{
+    chk(xX1,xY1,d.xray.includes(val),lbl); xY1+=LH;
+  });
+  xY1+=1.5; subH(xX1,xY1+1,'SPINE & PELVIS'); xY1+=LH;
+  ['Cervical Spine','Thoracic Spine','Lumbar Spine','Sacrum & Coccyx','Pelvis','SI Joints','Scoliosis Series'].forEach(v=>{
+    chk(xX1,xY1,d.xray.includes(v),v); xY1+=LH;
+  });
+
+  // Col 2: Abdomen + Skeletal + Head/Neck
+  subH(xX2,xY2+1,'ABDOMEN'); xY2+=LH;
+  ['KUB/Flat Plate','Acute (3 views)'].forEach(v=>{chk(xX2,xY2,d.xray.includes(v),v);xY2+=LH;});
+  xY2+=1.5; subH(xX2,xY2+1,'SKELETAL SURVEY'); xY2+=LH;
+  ['Bone Age','Metastatic Survey'].forEach(v=>{chk(xX2,xY2,d.xray.includes(v),v);xY2+=LH;});
+  xY2+=1.5; subH(xX2,xY2+1,'HEAD & NECK'); xY2+=LH;
+  ['Skull','Facial Bones','Nasal Bones','Mandible','TM Joints','Soft Tissue Neck','Orbits MRI/FB','Orbits Trauma'].forEach(v=>{
+    chk(xX2,xY2,d.xray.includes(v),v); xY2+=LH;
+  });
+
+  // Col 3: Upper + Lower extremities (R/L checkboxes)
+  subH(xX3,xY3+1,'UPPER EXTREMITIES'); xY3+=LH;
+  setFont(6,'bold',[100,110,120]);
+  doc.text('R    L',xX3,xY3+2); xY3+=LH;
+  ['Shoulder','Clavicle','AC Joints','Scapula','Humerus','Elbow','Forearm','Wrist','Hand','Digits','Wrist & Scaphoid'].forEach(v=>{
+    rl2(xX3,xY3,d.xray.includes(v+' R'),d.xray.includes(v+' L'),v); xY3+=LH;
+  });
+  xY3+=1.5; subH(xX3,xY3+1,'LOWER EXTREMITIES'); xY3+=LH;
+  setFont(6,'bold',[100,110,120]);
+  doc.text('R    L',xX3,xY3+2); xY3+=LH;
+  ['Hip','Femur','Knee','Tibia & Fibula','Ankle','Foot','Calcaneus','Toes'].forEach(v=>{
+    rl2(xX3,xY3,d.xray.includes(v+' R'),d.xray.includes(v+' L'),v); xY3+=LH;
+  });
+
+  const xRayBottom=Math.max(xY1,xY2,xY3)+2;
+  // Draw vertical dividers in X-Ray panel
+  vline(xX+xc,xrayStartY,xRayBottom-xrayStartY);
+  vline(xX+xc*2,xrayStartY,xRayBottom-xrayStartY);
+  outline(xX,Y-11,panW,xRayBottom-Y+11);
+
+  // ── ULTRASOUND PANEL ──
+  let uY=Y-11; // align top with XRay section header
+  secBar(uX,uY,panW,'APPOINTMENT REQUIRED FOR ALL EXAMS BELOW',true); uY+=5.5;
+  secBar(uX,uY,panW,'ULTRASOUND'); uY+=5.5;
+  const usStartY=uY;
+
+  const uc=panW/3;
+  const uX1=uX+1, uX2=uX+uc+1, uX3=uX+uc*2+1;
+  let uY1=uY, uY2=uY, uY3=uY;
+
+  // US Col 1: General + Pelvis + Small Parts
+  subH(uX1,uY1+1,'GENERAL'); uY1+=LH;
+  [
+    ['Abdomen & Pelvis Complete','Abdomen & Pelvis Complete (incl. Transvaginal for females)'],
+    ['No Transvaginal US','No TV (No Transvaginal)'],
+    ['Abdomen Complete (limited)','Abdomen Complete (limited bladder & lower quadrants)'],
+    ['Portal Hypertension/Cirrhosis','Portal Hypertension/Cirrhosis'],
+    ['Cirrhosis/Chronic Hep Screen','Cirrhosis/Chronic Hepatitis Screening (q6mo)'],
+    ['Abdomen Only','Abdomen Only'],
+    ['Kidneys & Bladder','Kidneys & Bladder'],
+    ['R/O Appendicitis','R/O Appendicitis (incl. adjacent DDx)'],
+    ['R/O Pyloric Stenosis','R/O Pyloric Stenosis (0-6 months)'],
+  ].forEach(([lbl,val])=>{ chk(uX1,uY1,d.us.includes(val),lbl,uc-5); uY1+=LH; });
+
+  uY1+=1.5; subH(uX1,uY1+1,'PELVIS'); uY1+=LH;
+  [
+    ['Female Pelvis (incl. TV)','Female Pelvis (incl. Transvaginal)'],
+    ['Male Pelvis','Male Pelvis (excludes transrectal)'],
+    ['Transrectal Prostate','Transrectal Prostate (incl. Bladder)'],
+    ['Bladder','Bladder'],
+    ['Incl. Postvoid Residual','Include Postvoid Residual/PVR'],
+  ].forEach(([lbl,val])=>{ chk(uX1,uY1,d.us.includes(val),lbl,uc-5); uY1+=LH; });
+
+  uY1+=1.5; subH(uX1,uY1+1,'SMALL PARTS'); uY1+=LH;
+  [
+    ['Thyroid Only','Thyroid Only'],
+    ['Complete Neck (incl. Thyroid)','Complete Neck (incl. Thyroid & Salivary Glands)'],
+    ['Lump / Lymph Node / Soft Tissue','Lump/Lymph Nodes/Soft Tissue'],
+    ['Groin for Hernia','Groin for Hernia'],
+    ['Scrotum (Testicular)','Scrotum (Testicular)'],
+    ['Abdominal Wall','Abdominal Wall'],
+  ].forEach(([lbl,val])=>{ chk(uX1,uY1,d.us.includes(val),lbl,uc-5); uY1+=LH; });
+  if(d.neckLoc||d.lumpLoc){
+    setFont(6,'italic',[100,110,120]);
+    if(d.neckLoc) doc.text('Neck loc: '+d.neckLoc,uX1+4,uY1);
+    if(d.lumpLoc) doc.text('Lump loc: '+d.lumpLoc,uX1+4,uY1+(d.neckLoc?3:0));
+    uY1+=(d.neckLoc&&d.lumpLoc?7:4);
+  }
+
+  // US Col 2: MSK + Vascular
+  subH(uX2,uY2+1,'MUSCULOSKELETAL'); uY2+=LH;
+  chk(uX2,uY2,d.us.includes('MSK - Include Relevant X-Rays'),'Incl. Relevant X-Rays'); uY2+=LH;
+  setFont(6,'bold',[100,110,120]); doc.text('R    L',uX2,uY2+2); uY2+=LH;
+  ['Rotator Cuff','Elbow','Wrist','Hand','Hip','Knee','Ankle','Foot','Other'].forEach(v=>{
+    rl2(uX2,uY2,d.us.includes('MSK '+v+' R'),d.us.includes('MSK '+v+' L'),v); uY2+=LH;
+  });
+
+  uY2+=2; subH(uX2,uY2+1,'VASCULAR'); uY2+=LH;
+  ['Carotid Arteries','CIMT','Aorta/Iliac (AAA Screen)'].forEach(v=>{chk(uX2,uY2,d.us.includes(v),v);uY2+=LH;});
+
+  uY2+=1.5; setFont(6.5,'bold',[30,80,160]); doc.text('Lower Extremity',uX2,uY2+1); uY2+=LH;
+  setFont(6,'bold',[100,110,120]); doc.text('R   L   B',uX2,uY2+2); uY2+=LH;
+  ['Arterial','Venous R/O DVT','Venous Insufficiency'].forEach(v=>{
+    rl3(uX2,uY2,d.us.includes('LE '+v+' R'),d.us.includes('LE '+v+' L'),d.us.includes('LE '+v+' B'),v);
+    uY2+=LH;
+  });
+  chk(uX2,uY2,d.us.includes('Include Venous Consultation'),'Incl. Venous Consult'); uY2+=LH;
+
+  uY2+=1.5; setFont(6.5,'bold',[30,80,160]); doc.text('Upper Extremity',uX2,uY2+1); uY2+=LH;
+  setFont(6,'bold',[100,110,120]); doc.text('R    L',uX2,uY2+2); uY2+=LH;
+  ['Arterial','Venous R/O DVT'].forEach(v=>{
+    rl2(uX2,uY2,d.us.includes('UE '+v+' R'),d.us.includes('UE '+v+' L'),v); uY2+=LH;
+  });
+
+  // US Col 3: OB + BMD + Breast + Echo + Nuclear
+  subH(uX3,uY3+1,'OBSTETRICAL'); uY3+=LH;
+  if(d.lmpDate){setFont(6,'italic',[100,110,120]);doc.text('LMP: '+d.lmpDate,uX3,uY3+1);uY3+=LH;}
+  [
+    ['1st Trimester (<11 wks)','OB 1st Trimester (<11 weeks)'],
+    ['OB Series (NT 11–14wk)','OB Series (NT 11-14wk + Anatomy 18-20wk)'],
+    ['EFTS/NT (11–14 weeks)','EFTS/NT (11-14 weeks)'],
+    ['Anatomy Scan (18–20 wks)','Anatomy Scan (18-20 weeks)'],
+    ['2nd/3rd Trimester (NR)','2nd/3rd Trimester (Non Routine)'],
+  ].forEach(([lbl,val])=>{ chk(uX3,uY3,d.us.includes(val),lbl,uc-3); uY3+=LH; });
+  if(d.obInd){setFont(6,'italic',[100,110,120]);doc.text('Ind: '+d.obInd.substring(0,22),uX3+3,uY3);uY3+=LH;}
+
+  uY3+=2; subH(uX3,uY3+1,'BONE MINERAL DENSITY'); uY3+=LH;
+  const bmdRow=[['First','BMD First'],['Routine','BMD Routine'],['High Risk','BMD High Risk']];
+  bmdRow.forEach(([lbl,val])=>{ chk(uX3,uY3,d.bmd.includes(val),lbl); uY3+=LH; });
+  if(d.lastBmd){setFont(6,'italic',[100,110,120]);doc.text('Last BMD: '+d.lastBmd,uX3+3,uY3);uY3+=LH;}
+
+  uY3+=2; subH(uX3,uY3+1,'DIGITAL BREAST IMAGING'); uY3+=LH;
+  setFont(6,'italic',[130,50,50]); doc.text('(Appointment Required)',uX3,uY3+1); uY3+=LH;
+  [
+    ['Mammography — Routine','Mammography Routine'],
+    ['Mammography — Diagnostic','Mammography Diagnostic'],
+    ['Mammography — OB-SP','Mammography OB-SP'],
+    ['Male Breast Bilateral US','Male Breast Bilateral US'],
+  ].forEach(([lbl,val])=>{ chk(uX3,uY3,d.breast.includes(val),lbl,uc-3); uY3+=LH; });
+  // Breast US R/L/B
+  setFont(6.5,'normal',[30,40,55]); doc.text('Breast US:',uX3,uY3+2.5);
+  const bLabels=['R','L','B'], bVals=['Breast US R','Breast US L','Breast US B'];
+  bVals.forEach((v,i)=>{
+    const bx=uX3+14+i*7;
+    doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(bx,uY3,3.2,3.2);
+    if(d.breast.includes(v)){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(bx+0.4,uY3+1.7,bx+1.3,uY3+2.8);doc.line(bx+1.3,uY3+2.8,bx+3.0,uY3+0.4);}
+    doc.setDrawColor(100,110,120);setFont(6.5,'normal',[30,40,55]);
+    doc.text(bLabels[i],bx+3.8,uY3+2.5);
+  });
+  uY3+=LH;
+
+  uY3+=2; subH(uX3,uY3+1,'ECHOCARDIOGRAPHY'); uY3+=LH;
+  setFont(6,'italic',[130,50,50]); doc.text('Appt Required · Accredited CorHealth ON',uX3,uY3+1); uY3+=LH;
+  chk(uX3,uY3,d.echo.includes('2D Echocardiogram'),'2D Echocardiogram'); uY3+=LH;
+  if(d.echoInd){
+    setFont(6,'italic',[100,110,120]);
+    const el=doc.splitTextToSize('Ind: '+d.echoInd, uc*0.95);
+    el.forEach(line=>{doc.text(line,uX3+3,uY3);uY3+=3.5;});
+  }
+
+  uY3+=2; subH(uX3,uY3+1,'NUCLEAR MEDICINE'); uY3+=LH;
+  [
+    ['Nuclear Cardiac Stress Test','Nuclear Cardiac Stress Test'],
+    ['Persantine','Persantine'],
+    ['HIDA','HIDA'],
+    ['Bone Scan','Bone Scan'],
+    ['Myocardial Wall Motion (MUGA)','Myocardial Wall Motion (MUGA) with Ejection Fraction'],
+  ].forEach(([lbl,val])=>{ chk(uX3,uY3,d.nuclear.includes(val),lbl,uc-3); uY3+=LH; });
+
+  // Draw US panel outlines + vertical dividers
+  const usPanelBottom=Math.max(uY1,uY2,uY3)+2;
+  outline(uX,uY-11,panW,usPanelBottom-uY+11);
+  vline(uX+uc,usStartY,usPanelBottom-usStartY);
+  vline(uX+uc*2,usStartY,usPanelBottom-usStartY);
+
+  // ══════════════════════════════════════════
+  // VEIN CLINIC
+  // ══════════════════════════════════════════
+  const sectionBottom=Math.max(xRayBottom, usPanelBottom)+2;
+  if(sectionBottom < H-14){
+    secBar(M,sectionBottom,W-M*2,'VEIN CLINIC');
+    let vy=sectionBottom+6;
+    chk(M+2,vy,d.vein.includes('Vein Clinic Assessment/Consultation'),'Assessment / Consultation');
+    if(d.veinReason){
+      setFont(7,'normal',[30,40,55]);
+      doc.text('Reason: '+d.veinReason.substring(0,90),M+2,vy+5);
+    }
+    setFont(6,'normal',[100,110,120]);
+    doc.text('Please attach present and past medical history, list of current medications, physical findings and relevant test results and reports.',M+2,vy+(d.veinReason?10:5));
+  }
+
+  // ══════════════════════════════════════════
+  // FOOTER
+  // ══════════════════════════════════════════
+  bar(0,H-6,W,6,14,100,210);
+  setFont(6.5,'normal',[255,255,255]);
+  doc.text('Requify Health · requifyhealth.com · PHIPA Compliant · Clear Medical Imaging · 519-256-4914 · clearimaging.ca · All facilities are scent-free.',M,H-2.5);
+
+  doc.save('Requify_ClearImaging_'+d.ref+'.pdf');
+}
+
+
+function submitReq(){
+  if(!validate()) return;
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;
+  btn.innerHTML='<svg style="width:14px;height:14px;animation:spin 1s linear infinite" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Sending...';
+  const g=id=>document.getElementById(id)?.value||'';
+  const now=new Date();
+  const labSel=g('lab-select');
+  const lab=LAB_DIRECTORY[labSel];
+  const labName=lab?lab.name:(g('custom-lab-name')||'Lab');
+  const labFax=lab?lab.fax:(g('custom-lab-fax')||'');
+  const ptFirst=g('pt-first'), ptLast=g('pt-last');
+  const provName=g('prov-name');
+  const ref='REQ-2026-'+String(Math.floor(Math.random()*9000)+1000);
+  const smsText=`Hi ${ptFirst}, your requisition from ${provName} has been submitted to ${labName}. Please bring this SMS or your health card to your appointment. Ref: ${ref} — Requify Health`;
+
+  const d={
+    id:'req-'+Date.now(), ref,
+    ptLast, ptFirst, ptDob:g('pt-dob'), ptHcard:g('pt-hcard'), ptVer:g('pt-ver'),
+    ptCell:g('pt-cell'), ptHome:g('pt-home'), ptAddr:g('pt-addr'),
+    provName, provBilling:g('prov-billing'), provCC:g('prov-cc'),
+    clinicalHx:g('clinical-hx'), stat:g('stat-sel'),
+    apptDate:g('appt-date'), apptTime:g('appt-time'),
+    neckLoc:g('neck-loc'), lumpLoc:g('lump-loc'), lmpDate:g('lmp-date'),
+    obInd:g('ob-indication'), echoInd:g('echo-indication'),
+    veinReason:g('vein-reason'), lastBmd:g('last-bmd'), breastROI:g('breast-roi'),
+    xray:getChecked('xray'), us:getChecked('us'), bmd:getChecked('bmd'),
+    breast:getChecked('breast'), echo:getChecked('echo'), nuclear:getChecked('nuclear'), vein:getChecked('vein'),
+    // Lab delivery
+    labKey:labSel, labName, labFax, deliveryMethod:g('delivery-method'),
+    // Patient notification
+    notifyMethod:g('notify-method'), notifyCell:g('notify-cell'), notifyEmail:g('notify-email'),
+    smsText,
+    // Dashboard fields
+    patientName:ptFirst+' '+ptLast,
+    examType:[...getChecked('xray'),...getChecked('us')][0]||'Imaging',
+    priority:g('stat-sel')||'Routine',
+    dateSubmitted:now.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}),
+    status:'submitted', deliveryMethod:g('delivery-method')||'eFax',
+  };
+
+  setTimeout(()=>{
+    // Generate PDF and store as data URL for dashboard view
+    try {
+      const pdfBytes = buildPDF_getBytes(d);
+      if (pdfBytes) {
+        const blob = new Blob([pdfBytes], {type:'application/pdf'});
+        const reader = new FileReader();
+        reader.onload = () => {
+          d.pdfDataUrl = reader.result;
+          finishSubmit(d, smsText, labName, labFax, ref, btn);
+        };
+        reader.readAsDataURL(blob);
+      } else {
+        finishSubmit(d, smsText, labName, labFax, ref, btn);
+      }
+    } catch(e) {
+      // Fallback: download PDF directly
+      buildPDF(d);
+      finishSubmit(d, smsText, labName, labFax, ref, btn);
+    }
+  }, 1200);
+}
+
+function finishSubmit(d, smsText, labName, labFax, ref, btn) {
+  // Save to localStorage for dashboard
+  localStorage.setItem('requify_pending', JSON.stringify(d));
+  // Clear any saved draft
+  localStorage.removeItem('requify_draft');
+
+  // Show success modal
+  document.getElementById('success-ref').textContent = ref;
+  document.getElementById('success-msg').textContent =
+    `Delivered to ${labName} via eFax (${labFax}). Patient ${d.notifyMethod !== 'none' ? 'notified by SMS ✓' : 'notification skipped'}. Now visible on your dashboard.`;
+  document.getElementById('sms-confirm-text').textContent = smsText;
+  document.getElementById('sms-confirm').style.display = d.notifyMethod === 'none' ? 'none' : 'block';
+  document.getElementById('success-overlay').classList.add('show');
+
+  btn.disabled = false;
+  const lbl = document.getElementById('submit-btn-label');
+  if (lbl) lbl.textContent = 'Send Requisition';
+  btn.disabled = false;
+}
+
+// Variant of buildPDF that returns bytes instead of saving
+function buildPDF_getBytes(d) {
+  try {
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'letter'});
+    // Run same logic as buildPDF but return arraybuffer
+    const W=216,H=279,M=7;
+    function setFont(sz,style,color){doc.setFontSize(sz);doc.setFont('helvetica',style||'normal');doc.setTextColor(...(color||[13,27,42]));}
+    function bar(x,y,w,h,r,g,b){doc.setFillColor(r,g,b);doc.rect(x,y,w,h,'F');}
+    function outline(x,y,w,h){doc.setDrawColor(160,170,180);doc.setLineWidth(0.25);doc.rect(x,y,w,h);}
+    function hline(x,y,w){doc.setDrawColor(180,190,200);doc.setLineWidth(0.2);doc.line(x,y,x+w,y);}
+    function vline(x,y,h){doc.setDrawColor(180,190,200);doc.setLineWidth(0.2);doc.line(x,y,x,y+h);}
+    function cell(x,y,w,label,value){setFont(5.5,'bold',[100,110,120]);doc.text(label,x+1,y+2.2);setFont(8,'normal',[10,20,35]);doc.text(String(value||'').substring(0,Math.floor(w/2)),x+1,y+6.5);}
+    function chk(x,y,ticked,label,maxW){doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x,y,3.2,3.2);if(ticked){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+0.4,y+1.7,x+1.3,y+2.8);doc.line(x+1.3,y+2.8,x+3.0,y+0.4);}doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);setFont(6.8,'normal',[20,30,45]);const lbl=maxW?doc.splitTextToSize(label,maxW)[0]:label;doc.text(lbl,x+4.2,y+2.6);}
+    function rl2(x,y,rT,lT,label){doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x,y,3.2,3.2);if(rT){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+0.4,y+1.7,x+1.3,y+2.8);doc.line(x+1.3,y+2.8,x+3.0,y+0.4);}doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x+4.5,y,3.2,3.2);if(lT){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+4.9,y+1.7,x+5.8,y+2.8);doc.line(x+5.8,y+2.8,x+7.5,y+0.4);}doc.setDrawColor(100,110,120);doc.setLineWidth(0.25);setFont(6.8,'normal',[20,30,45]);doc.text(label,x+9.5,y+2.6);}
+    function rl3(x,y,rT,lT,bT,label){[rT,lT,bT].forEach((t,i)=>{doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(x+i*4.5,y,3.2,3.2);if(t){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(x+i*4.5+0.4,y+1.7,x+i*4.5+1.3,y+2.8);doc.line(x+i*4.5+1.3,y+2.8,x+i*4.5+3.0,y+0.4);}doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);});setFont(6.8,'normal',[20,30,45]);doc.text(label,x+15,y+2.6);}
+    function secBar(x,y,w,label,dark){const[r,g,b]=dark?[28,38,50]:[55,70,82];bar(x,y,w,5.5,r,g,b);setFont(7,'bold',[255,255,255]);doc.text(label,x+2,y+3.9);}
+    function subH(x,y,label){setFont(6.5,'bold',[20,70,160]);doc.text(label,x,y);}
+    const LH=4.2;
+    bar(0,0,W,6.5,14,100,210);setFont(8,'bold',[255,255,255]);doc.text('REQUIFY HEALTH — Digital Requisition',M,4.5);setFont(7,'normal',[255,255,255]);doc.text('REF: '+d.ref+'   Generated: '+new Date().toLocaleDateString('en-CA'),120,4.5);
+    bar(0,6.5,W,9,28,38,50);setFont(13,'bold',[255,255,255]);doc.text('GENERAL REQUISITION FORM',M,13);setFont(7,'bold',[255,255,255]);doc.text('FOR APPOINTMENT BOOKING CALL 519-256-4914  OR FAX: 519-256-3221',110,10);setFont(6,'normal',[200,215,230]);doc.text('Please provide 24 hours advance notice if unable to keep appointment.',110,13.5);doc.text('Please arrive 10 minutes early with your health card and this form.',110,16.5);
+    let Y=18;
+    const colW=(W-M*2)/2-1;const ptX=M,pvX=M+colW+2;const infoH=42;
+    outline(ptX,Y,colW,infoH);secBar(ptX,Y,colW,'PATIENT INFORMATION',true);let py=Y+7;
+    cell(ptX+1,py,colW/2-1,'LAST NAME',d.ptLast);vline(ptX+colW/2,py,9);cell(ptX+colW/2+1,py,colW/2-2,'FIRST NAME',d.ptFirst);
+    py+=10;hline(ptX,py,colW);const row2w=colW/3;
+    cell(ptX+1,py,row2w-1,'PHONE (CELL)',d.ptCell);vline(ptX+row2w,py,9);cell(ptX+row2w+1,py,row2w-1,'PHONE (HOME)',d.ptHome||'');vline(ptX+row2w*2,py,9);cell(ptX+row2w*2+1,py,row2w-1,'DATE OF BIRTH',d.ptDob);
+    py+=10;hline(ptX,py,colW);cell(ptX+1,py,colW*0.45,'ADDRESS',d.ptAddr||'');vline(ptX+colW*0.45,py,9);cell(ptX+colW*0.45+1,py,colW*0.22,'HEALTH CARD NO.',d.ptHcard);vline(ptX+colW*0.67,py,9);cell(ptX+colW*0.67+1,py,colW*0.1,'VER.',d.ptVer||'');vline(ptX+colW*0.77,py,9);cell(ptX+colW*0.77+1,py,colW*0.12,'APPT DATE',d.apptDate||'');vline(ptX+colW*0.89,py,9);cell(ptX+colW*0.89+1,py,colW*0.1,'TIME',d.apptTime||'');
+    outline(pvX,Y,colW,infoH);secBar(pvX,Y,colW,'PROVIDER INFORMATION',true);let pvy=Y+7;
+    cell(pvX+1,pvy,colW*0.68,'PROVIDER NAME (PRINT)',d.provName);vline(pvX+colW*0.68,pvy,9);cell(pvX+colW*0.68+1,pvy,colW*0.31,'BILLING NO.',d.provBilling||'');
+    pvy+=10;hline(pvX,pvy,colW);setFont(5.5,'bold',[100,110,120]);doc.text('PROVIDER SIGNATURE',pvX+1,pvy+2.2);vline(pvX+colW*0.68,pvy,11);cell(pvX+colW*0.68+1,pvy,colW*0.31,'CC',d.provCC||'');
+    try{doc.addImage(canvas.toDataURL('image/png'),'PNG',pvX+1,pvy+3,colW*0.65,7);}catch(e){}
+    pvy+=12;hline(pvX,pvy,colW);cell(pvX+1,pvy,colW*0.68,'CLINICAL HX / REASON',d.clinicalHx||'');vline(pvX+colW*0.68,pvy,9);
+    if(d.stat){bar(pvX+colW*0.69,pvy+0.5,colW*0.3,8,210,30,30);setFont(10,'bold',[255,255,255]);doc.text('STAT',pvX+colW*0.78,pvy+6);}else{cell(pvX+colW*0.68+1,pvy,colW*0.31,'PRIORITY','Routine');}
+    // Delivery info strip
+    Y+=infoH+1;bar(ptX,Y,W-M*2,5.5,14,100,210,0.15);
+    setFont(7,'bold',[14,94,194]);doc.text('SENT TO: '+d.labName+' — '+d.labFax+'   ·   DELIVERY: '+(d.deliveryMethod||'eFax').toUpperCase()+'   ·   PATIENT SMS: '+(d.notifyMethod!=='none'?'✓ Sent to '+d.notifyCell:'Not sent'),ptX+2,Y+3.8);
+    Y+=7;
+    const panW=colW;const xX=M,uX=M+panW+2;
+    secBar(xX,Y,panW,'NO APPOINTMENT REQUIRED',true);Y+=5.5;secBar(xX,Y,panW,'X-RAY');Y+=5.5;
+    const xrayStartY=Y;const xc=panW/3;const xX1=xX+1,xX2=xX+xc+1,xX3=xX+xc*2+1;let xY1=Y,xY2=Y,xY3=Y;
+    subH(xX1,xY1+1,'CHEST');xY1+=LH;[['Chest PA & LAT','Chest PA & LAT R'],['Sternum','Sternum'],['SC Joints','SC Joints'],['Ribs R','Ribs R'],['Ribs L','Ribs L']].forEach(([l,v])=>{chk(xX1,xY1,d.xray.includes(v),l);xY1+=LH;});
+    xY1+=1.5;subH(xX1,xY1+1,'SPINE & PELVIS');xY1+=LH;['Cervical Spine','Thoracic Spine','Lumbar Spine','Sacrum & Coccyx','Pelvis','SI Joints','Scoliosis Series'].forEach(v=>{chk(xX1,xY1,d.xray.includes(v),v);xY1+=LH;});
+    subH(xX2,xY2+1,'ABDOMEN');xY2+=LH;['KUB/Flat Plate','Acute (3 views)'].forEach(v=>{chk(xX2,xY2,d.xray.includes(v),v);xY2+=LH;});xY2+=1.5;subH(xX2,xY2+1,'SKELETAL SURVEY');xY2+=LH;['Bone Age','Metastatic Survey'].forEach(v=>{chk(xX2,xY2,d.xray.includes(v),v);xY2+=LH;});xY2+=1.5;subH(xX2,xY2+1,'HEAD & NECK');xY2+=LH;['Skull','Facial Bones','Nasal Bones','Mandible','TM Joints','Soft Tissue Neck','Orbits MRI/FB','Orbits Trauma'].forEach(v=>{chk(xX2,xY2,d.xray.includes(v),v);xY2+=LH;});
+    subH(xX3,xY3+1,'UPPER EXTREMITIES');xY3+=LH;setFont(6,'bold',[100,110,120]);doc.text('R    L',xX3,xY3+2);xY3+=LH;['Shoulder','Clavicle','AC Joints','Scapula','Humerus','Elbow','Forearm','Wrist','Hand','Digits','Wrist & Scaphoid'].forEach(v=>{rl2(xX3,xY3,d.xray.includes(v+' R'),d.xray.includes(v+' L'),v);xY3+=LH;});
+    xY3+=1.5;subH(xX3,xY3+1,'LOWER EXTREMITIES');xY3+=LH;setFont(6,'bold',[100,110,120]);doc.text('R    L',xX3,xY3+2);xY3+=LH;['Hip','Femur','Knee','Tibia & Fibula','Ankle','Foot','Calcaneus','Toes'].forEach(v=>{rl2(xX3,xY3,d.xray.includes(v+' R'),d.xray.includes(v+' L'),v);xY3+=LH;});
+    const xRayBottom=Math.max(xY1,xY2,xY3)+2;vline(xX+xc,xrayStartY,xRayBottom-xrayStartY);vline(xX+xc*2,xrayStartY,xRayBottom-xrayStartY);outline(xX,Y-11,panW,xRayBottom-Y+11);
+    let uY=Y-11;secBar(uX,uY,panW,'APPOINTMENT REQUIRED FOR ALL EXAMS BELOW',true);uY+=5.5;secBar(uX,uY,panW,'ULTRASOUND');uY+=5.5;
+    const usStartY=uY;const uc=panW/3;const uX1=uX+1,uX2=uX+uc+1,uX3=uX+uc*2+1;let uY1=uY,uY2=uY,uY3=uY;
+    subH(uX1,uY1+1,'GENERAL');uY1+=LH;[['Abdomen & Pelvis Complete','Abdomen & Pelvis Complete (incl. Transvaginal for females)'],['No Transvaginal US','No TV (No Transvaginal)'],['Abdomen Complete (limited)','Abdomen Complete (limited bladder & lower quadrants)'],['Portal Hypertension','Portal Hypertension/Cirrhosis'],['Cirrhosis/Chronic Hep','Cirrhosis/Chronic Hepatitis Screening (q6mo)'],['Abdomen Only','Abdomen Only'],['Kidneys & Bladder','Kidneys & Bladder'],['R/O Appendicitis','R/O Appendicitis (incl. adjacent DDx)'],['R/O Pyloric Stenosis','R/O Pyloric Stenosis (0-6 months)']].forEach(([l,v])=>{chk(uX1,uY1,d.us.includes(v),l,uc-5);uY1+=LH;});
+    uY1+=1.5;subH(uX1,uY1+1,'PELVIS');uY1+=LH;[['Female Pelvis (incl. TV)','Female Pelvis (incl. Transvaginal)'],['Male Pelvis','Male Pelvis (excludes transrectal)'],['Transrectal Prostate','Transrectal Prostate (incl. Bladder)'],['Bladder','Bladder'],['Incl. Postvoid Residual','Include Postvoid Residual/PVR']].forEach(([l,v])=>{chk(uX1,uY1,d.us.includes(v),l,uc-5);uY1+=LH;});
+    uY1+=1.5;subH(uX1,uY1+1,'SMALL PARTS');uY1+=LH;[['Thyroid Only','Thyroid Only'],['Complete Neck','Complete Neck (incl. Thyroid & Salivary Glands)'],['Lump / Lymph Node','Lump/Lymph Nodes/Soft Tissue'],['Groin for Hernia','Groin for Hernia'],['Scrotum (Testicular)','Scrotum (Testicular)'],['Abdominal Wall','Abdominal Wall']].forEach(([l,v])=>{chk(uX1,uY1,d.us.includes(v),l,uc-5);uY1+=LH;});
+    subH(uX2,uY2+1,'MUSCULOSKELETAL');uY2+=LH;chk(uX2,uY2,d.us.includes('MSK - Include Relevant X-Rays'),'Incl. Relevant X-Rays');uY2+=LH;setFont(6,'bold',[100,110,120]);doc.text('R    L',uX2,uY2+2);uY2+=LH;['Rotator Cuff','Elbow','Wrist','Hand','Hip','Knee','Ankle','Foot','Other'].forEach(v=>{rl2(uX2,uY2,d.us.includes('MSK '+v+' R'),d.us.includes('MSK '+v+' L'),v);uY2+=LH;});
+    uY2+=2;subH(uX2,uY2+1,'VASCULAR');uY2+=LH;['Carotid Arteries','CIMT','Aorta/Iliac (AAA Screen)'].forEach(v=>{chk(uX2,uY2,d.us.includes(v),v);uY2+=LH;});
+    uY2+=1.5;setFont(6.5,'bold',[30,80,160]);doc.text('Lower Extremity',uX2,uY2+1);uY2+=LH;setFont(6,'bold',[100,110,120]);doc.text('R   L   B',uX2,uY2+2);uY2+=LH;['Arterial','Venous R/O DVT','Venous Insufficiency'].forEach(v=>{rl3(uX2,uY2,d.us.includes('LE '+v+' R'),d.us.includes('LE '+v+' L'),d.us.includes('LE '+v+' B'),v);uY2+=LH;});
+    chk(uX2,uY2,d.us.includes('Include Venous Consultation'),'Incl. Venous Consult');uY2+=LH;uY2+=1.5;setFont(6.5,'bold',[30,80,160]);doc.text('Upper Extremity',uX2,uY2+1);uY2+=LH;setFont(6,'bold',[100,110,120]);doc.text('R    L',uX2,uY2+2);uY2+=LH;['Arterial','Venous R/O DVT'].forEach(v=>{rl2(uX2,uY2,d.us.includes('UE '+v+' R'),d.us.includes('UE '+v+' L'),v);uY2+=LH;});
+    subH(uX3,uY3+1,'OBSTETRICAL');uY3+=LH;if(d.lmpDate){setFont(6,'italic',[100,110,120]);doc.text('LMP: '+d.lmpDate,uX3,uY3+1);uY3+=LH;}[['1st Trimester (<11 wks)','OB 1st Trimester (<11 weeks)'],['OB Series (NT 11-14wk)','OB Series (NT 11-14wk + Anatomy 18-20wk)'],['EFTS/NT (11-14 wks)','EFTS/NT (11-14 weeks)'],['Anatomy Scan (18-20 wks)','Anatomy Scan (18-20 weeks)'],['2nd/3rd Trimester (NR)','2nd/3rd Trimester (Non Routine)']].forEach(([l,v])=>{chk(uX3,uY3,d.us.includes(v),l,uc-3);uY3+=LH;});
+    uY3+=2;subH(uX3,uY3+1,'BONE MINERAL DENSITY');uY3+=LH;[['First','BMD First'],['Routine','BMD Routine'],['High Risk','BMD High Risk']].forEach(([l,v])=>{chk(uX3,uY3,d.bmd.includes(v),l);uY3+=LH;});
+    uY3+=2;subH(uX3,uY3+1,'DIGITAL BREAST IMAGING');uY3+=LH;setFont(6,'italic',[130,50,50]);doc.text('(Appointment Required)',uX3,uY3+1);uY3+=LH;[['Mammography — Routine','Mammography Routine'],['Mammography — Diagnostic','Mammography Diagnostic'],['Mammography — OB-SP','Mammography OB-SP'],['Male Breast Bilateral US','Male Breast Bilateral US']].forEach(([l,v])=>{chk(uX3,uY3,d.breast.includes(v),l,uc-3);uY3+=LH;});
+    setFont(6.5,'normal',[30,40,55]);doc.text('Breast US:',uX3,uY3+2.5);['Breast US R','Breast US L','Breast US B'].forEach((v,i)=>{const bx=uX3+14+i*7;doc.setDrawColor(100,110,120);doc.setLineWidth(0.3);doc.rect(bx,uY3,3.2,3.2);if(d.breast.includes(v)){doc.setDrawColor(14,100,210);doc.setLineWidth(0.7);doc.line(bx+0.4,uY3+1.7,bx+1.3,uY3+2.8);doc.line(bx+1.3,uY3+2.8,bx+3.0,uY3+0.4);}doc.setDrawColor(100,110,120);setFont(6.5,'normal',[30,40,55]);doc.text(['R','L','B'][i],bx+3.8,uY3+2.5);});uY3+=LH;
+    uY3+=2;subH(uX3,uY3+1,'ECHOCARDIOGRAPHY');uY3+=LH;chk(uX3,uY3,d.echo.includes('2D Echocardiogram'),'2D Echocardiogram');uY3+=LH;
+    uY3+=2;subH(uX3,uY3+1,'NUCLEAR MEDICINE');uY3+=LH;[['Nuclear Cardiac Stress Test','Nuclear Cardiac Stress Test'],['Persantine','Persantine'],['HIDA','HIDA'],['Bone Scan','Bone Scan'],['Myocardial Wall Motion (MUGA)','Myocardial Wall Motion (MUGA) with Ejection Fraction']].forEach(([l,v])=>{chk(uX3,uY3,d.nuclear.includes(v),l,uc-3);uY3+=LH;});
+    const usPanelBottom=Math.max(uY1,uY2,uY3)+2;outline(uX,uY-11,panW,usPanelBottom-uY+11);vline(uX+uc,usStartY,usPanelBottom-usStartY);vline(uX+uc*2,usStartY,usPanelBottom-usStartY);
+    const sectionBottom=Math.max(xRayBottom,usPanelBottom)+2;
+    if(sectionBottom<H-14){secBar(M,sectionBottom,W-M*2,'VEIN CLINIC');let vy=sectionBottom+6;chk(M+2,vy,d.vein.includes('Vein Clinic Assessment/Consultation'),'Assessment / Consultation');if(d.veinReason){setFont(7,'normal',[30,40,55]);doc.text('Reason: '+d.veinReason.substring(0,90),M+2,vy+5);}}
+    bar(0,H-6,W,6,14,100,210);setFont(6.5,'normal',[255,255,255]);doc.text('Requify Health · requifyhealth.com · PHIPA Compliant · '+d.labName+' · 519-256-4914 · clearimaging.ca · All facilities are scent-free.',M,H-2.5);
+    return doc.output('arraybuffer');
+  } catch(e) { console.error('PDF error:',e); return null; }
+}
+
+function saveDraft() {
+  const g = id => document.getElementById(id)?.value || '';
+  const draft = {
+    savedAt: new Date().toLocaleString('en-CA'),
+    ptLast: g('pt-last'), ptFirst: g('pt-first'), ptDob: g('pt-dob'),
+    ptHcard: g('pt-hcard'), ptVer: g('pt-ver'), ptCell: g('pt-cell'),
+    ptHome: g('pt-home'), ptAddr: g('pt-addr'), ptEmail: g('pt-email'),
+    provName: g('prov-name'), provBilling: g('prov-billing'), provCC: g('prov-cc'),
+    clinicalHx: g('clinical-hx'), labKey: g('lab-select'),
+    apptDate: g('appt-date'), apptTime: g('appt-time'),
+    xray: getChecked('xray'), us: getChecked('us'), bmd: getChecked('bmd'),
+    breast: getChecked('breast'), echo: getChecked('echo'),
+    nuclear: getChecked('nuclear'), vein: getChecked('vein'),
+    neckLoc: g('neck-loc'), lumpLoc: g('lump-loc'),
+  };
+  localStorage.setItem('requify_draft', JSON.stringify(draft));
+  // Show toast
+  let t = document.getElementById('draft-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'draft-toast';
+    t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:500;background:var(--green);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;font-family:Syne,sans-serif;box-shadow:0 4px 20px rgba(10,158,110,0.3);transition:opacity 0.3s';
+    document.body.appendChild(t);
+  }
+  t.textContent = '✓ Draft saved — resumes automatically next time you open New Requisition';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.style.opacity = '0', 3500);
+}
+
+// Load draft on page open if one exists
+(function loadDraftIfExists() {
+  try {
+    const draft = JSON.parse(localStorage.getItem('requify_draft') || 'null');
+    if (!draft) return;
+    // Only restore if patient name is present (meaningful draft)
+    if (!draft.ptFirst && !draft.ptLast) return;
+    const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+    set('pt-last', draft.ptLast); set('pt-first', draft.ptFirst); set('pt-dob', draft.ptDob);
+    set('pt-hcard', draft.ptHcard); set('pt-ver', draft.ptVer); set('pt-cell', draft.ptCell);
+    set('pt-home', draft.ptHome); set('pt-addr', draft.ptAddr); set('pt-email', draft.ptEmail);
+    set('prov-name', draft.provName); set('prov-billing', draft.provBilling);
+    set('clinical-hx', draft.clinicalHx); set('appt-date', draft.apptDate);
+    set('neck-loc', draft.neckLoc); set('lump-loc', draft.lumpLoc);
+    // Restore checkboxes
+    ['xray','us','bmd','breast','echo','nuclear','vein'].forEach(name => {
+      const vals = draft[name] || [];
+      vals.forEach(v => { const cb = document.querySelector(`input[name="${name}"][value="${v}"]`); if (cb) cb.checked = true; });
+    });
+    // Restore lab selection
+    if (draft.labKey) { const el = document.getElementById('lab-select'); if (el) { el.value = draft.labKey; updateLabDetails(draft.labKey); } }
+    // Show restore banner
+    let banner = document.createElement('div');
+    banner.style.cssText = 'background:var(--blue-pale);border:1px solid rgba(14,124,240,0.2);border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:var(--blue);display:flex;align-items:center;gap:10px';
+    banner.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Draft restored from ${draft.savedAt} <button onclick="clearDraft(this.parentNode)" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:12px;color:var(--blue);text-decoration:underline">Clear draft</button>`;
+    const content = document.querySelector('.content');
+    if (content) content.insertBefore(banner, content.firstChild);
+  } catch(e) {}
+})();
+
+function clearDraft(banner) {
+  localStorage.removeItem('requify_draft');
+  banner?.remove();
+}
+
+function resetForm() {
+  document.getElementById('success-overlay').classList.remove('show');
+  document.querySelectorAll('input[type="checkbox"],input[type="radio"]').forEach(c => c.checked = false);
+  ['pt-last','pt-first','pt-dob','pt-hcard','pt-ver','pt-cell','pt-home','pt-addr','pt-email',
+   'clinical-hx','neck-loc','lump-loc','lmp-date','ob-indication','echo-indication',
+   'vein-reason','last-bmd','breast-roi','nuclear-spec','appt-date',
+   'custom-lab-name','custom-lab-fax','custom-lab-email',
+   'notify-cell','notify-email'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  // Reset selects
+  ['lab-select','delivery-method','notify-method','stat-sel'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.selectedIndex = 0;
+  });
+  document.getElementById('lab-details').style.display = 'none';
+  document.getElementById('custom-lab-fields').style.display = 'none';
+  document.getElementById('submit-btn-label').textContent = 'Send Requisition';
+  clearPatientSearch();
+  clearSig();
+  apptTimeLocked = false;
+  const f = document.getElementById('appt-time');
+  if (f) { f.style.background = 'var(--blue-pale)'; f.style.color = 'var(--blue)'; f.onclick = setApptTimeNow; }
+  window.scrollTo(0, 0);
+  updateSMSPreview();
+}
+</script>
+</body>
+</html>
